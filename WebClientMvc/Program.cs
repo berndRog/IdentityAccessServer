@@ -3,38 +3,57 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using WebClientMvc;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Services.AddControllersWithViews();
 
-var authSection   = builder.Configuration.GetSection("AuthServer");
-var authority     = authSection["Authority"] ?? "https://localhost:7001/";
-var clientId      = authSection["ClientId"] ?? "webclient-mvc";
+
+builder.Services
+   .AddOptions<OidcClientOptions>()
+   .Bind(builder.Configuration.GetSection("AuthServer"))
+   .ValidateDataAnnotations()
+   .ValidateOnStart();
+
+var oidc = builder.Configuration
+   .GetSection("AuthServer")
+   .Get<OidcClientOptions>()!;
+
 var clientSecret  = builder.Configuration["AuthServer:WebMvc:ClientSecret"] ?? "webclient-mvc-secret"; // ✅ dein secret-key
-var scopes        = authSection.GetSection("Scopes").Get<string[]>() ?? ["openid"];
 
-Console.WriteLine($"AuthServer:Authority={authority}");
-Console.WriteLine($"AuthServer:ClientId={clientId}");
+Console.WriteLine($"AuthServer:Authority={oidc.Authority}");
+Console.WriteLine($"AuthServer:ClientId={oidc.ClientId}");
 Console.WriteLine($"AuthServer:WebMvc:ClientSecret={clientSecret}");
+Console.WriteLine($"BaseUrl: {oidc.BaseUrl}");
+Console.WriteLine($"RedirectPath: {oidc.RedirectPath}");
+Console.WriteLine($"SignedOutCallbackPath: {oidc.SignedOutCallbackPath}");
+Console.WriteLine($"PostLogoutRedirectPath: {oidc.PostLogoutRedirectPath}");
+
+Console.WriteLine($"Scopes: {string.Join(", ", oidc.Scopes)}");
 
 
-
-builder.Services.AddAuthentication(authOpt =>
-   {
+builder.Services.AddAuthentication(authOpt => {
       authOpt.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
       authOpt.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
    })
    .AddCookie()
    .AddOpenIdConnect(openIdOpt => {
-      openIdOpt.Authority = authority.TrimEnd('/');
-      openIdOpt.ClientId = clientId;
+      openIdOpt.Authority = oidc.Authority;
+      openIdOpt.ClientId = oidc.ClientId;
       openIdOpt.ClientSecret = clientSecret;
       openIdOpt.ResponseType = "code";
+      openIdOpt.SaveTokens = true;
 
       openIdOpt.SaveTokens = true;
       openIdOpt.GetClaimsFromUserInfoEndpoint = true;
 
+      // Login callback (muss in OpenIddict RedirectUris stehen)
+      openIdOpt.CallbackPath = oidc.RedirectPath;
+
+      // Logout callback (lokaler Endpoint in MVC, Standard ist genau das)
+      openIdOpt.SignedOutCallbackPath = oidc.SignedOutCallbackPath;
+      openIdOpt.SignedOutRedirectUri = oidc.PostLogoutRedirectUri.ToString();
+      
+      
       openIdOpt.Scope.Clear();
-      foreach (var s in scopes)
+      foreach (var s in oidc.Scopes)
          openIdOpt.Scope.Add(s);
    });
 

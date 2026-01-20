@@ -13,8 +13,7 @@ namespace OidcOauthServer.Auth.Dev;
 #if DEBUG
 [ApiController]
 [Route("_dev")]
-public sealed class TokenDebugController : ControllerBase
-{
+public sealed class TokenDebugController : ControllerBase {
    /// <summary>
    /// Returns information about the authenticated principal.
    ///
@@ -22,14 +21,11 @@ public sealed class TokenDebugController : ControllerBase
    /// </summary>
    [HttpGet("whoami")]
    [Authorize]
-   public IActionResult WhoAmI()
-   {
-      return Ok(new
-      {
+   public IActionResult WhoAmI() {
+      return Ok(new {
          authenticationType = User.Identity?.AuthenticationType,
          isAuthenticated = User.Identity?.IsAuthenticated,
-         claims = User.Claims.Select(c => new
-         {
+         claims = User.Claims.Select(c => new {
             type = c.Type,
             value = c.Value
          })

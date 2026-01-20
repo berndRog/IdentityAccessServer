@@ -8,6 +8,7 @@ namespace OidcOauthServer.Auth.Options;
 /// - Client secrets are read from configuration (UserSecrets/Env/KeyVault).
 /// </summary>
 public sealed class AuthServerOptions {
+   
    public const string SectionName = "AuthServer";
 
    // OIDC Issuer (single source of truth)
@@ -22,11 +23,15 @@ public sealed class AuthServerOptions {
    /// Derived authority base URL (same as issuer, but as string).
    /// </summary>
    public string AuthorityBaseUrl => EnsureTrailingSlash(IssuerUri);
-
-
-   
    
    public Uri Issuer => new(EnsureTrailingSlash(IssuerUri));
+   
+   // Token behavior (dev/teaching vs realistic production setup)
+   // ------------------------------------------------------------------
+   /// <summary>
+   /// Token-related switches (kept together to avoid option-sprawl).
+   /// </summary>
+   public TokenOptions Tokens { get; init; } = new();
 
    // Endpoints (paths are stable; actual URIs derived from Issuer)
    // ------------------------------------------------------------------
@@ -48,35 +53,10 @@ public sealed class AuthServerOptions {
 
    // Clients
    // ------------------------------------------------------------------
-   public ClientOptions BlazorWasm { get; init; } = new() {
-      ClientId = "blazor-wasm",
-      BaseUrl = "https://localhost:6001",
-      RedirectPath = "/authentication/login-callback",
-      PostLogoutRedirectPath = "/authentication/logout-callback",
-      Type = ClientType.Public
-   };
-
-   public ClientOptions WebMvc { get; init; } = new() {
-      ClientId = "webclient-mvc",
-      BaseUrl = "https://localhost:6002",
-      RedirectPath = "/signin-oidc",
-      PostLogoutRedirectPath = "/signout-callback-oidc",
-      Type = ClientType.Confidential
-   };
-
-   public AndroidClientOptions Android { get; init; } = new() {
-      ClientId = "android-client",
-      BaseUrl = "com.rogallab.oidc:",
-      RedirectPath = "/callback",
-      PostLogoutRedirectPath = "/logout-callback",
-      LoopbackRedirectPath = "http://127.0.0.1:8765/callback",
-      Type = ClientType.Public
-   };
-
-   public ClientOptions ServiceClient { get; init; } = new() {
-      ClientId = "service-client",
-      Type = ClientType.Confidential
-   };
+   public ClientOptions BlazorWasm { get; init; } = default!;
+   public ClientOptions WebMvc { get; init; } = default!;
+   public AndroidClientOptions Android { get; init; } = default!;
+   public ClientOptions ServiceClient { get; init; } = default!;
 
    // ------------------------------------------------------------------
    // Derived redirect URIs
@@ -108,19 +88,18 @@ public sealed class AuthServerOptions {
    public Uri WebMvcPostLogoutRedirectUri() =>
       CombineBaseAndPath(WebMvc.BaseUrl, WebMvc.PostLogoutRedirectPath);
    
-   public Uri AndroidRedirectUri() =>
-      CombineBaseAndPath(Android.BaseUrl, Android.RedirectPath);
+   public Uri AndroidCustomSchemeRedirectUri() =>
+      new (Android.CustomSchemeRedirectUriString, UriKind.Absolute);
 
    public Uri AndroidLoopbackRedirectUri() =>
-      CombineBaseAndPath(Android.BaseUrl, Android.LoopbackRedirectPath);
+      new (Android.LoopbackRedirectUriString, UriKind.Absolute);
    
-   public Uri AndroidPostLogoutRedirectUri() =>
-      CombineBaseAndPath(Android.BaseUrl, Android.PostLogoutRedirectPath);
-
+   public Uri AndroidPostLogoutRedirectUri()
+      => new(Android.PostLogoutRedirectUriString, UriKind.Absolute);
+   
    // ------------------------------------------------------------------
    // Helpers
    // ------------------------------------------------------------------
-
    public static string EnsureTrailingSlash(string url)
       => url.EndsWith("/", StringComparison.Ordinal) ? url : url + "/";
 
@@ -131,23 +110,6 @@ public sealed class AuthServerOptions {
 public enum ClientType {
    Public = 1,
    Confidential = 2
-}
-
-public sealed class ClientOptions {
-   public string ClientId { get; init; } = default!;
-   public string BaseUrl { get; init; } = "";
-   public string RedirectPath { get; init; } = "";
-   public string PostLogoutRedirectPath { get; init; } = "";
-   public ClientType Type { get; init; } = ClientType.Public;
-}
-
-public sealed class AndroidClientOptions {
-   public string ClientId { get; init; } = default!;
-   public string BaseUrl { get; init; } = "";
-   public string RedirectPath { get; init; } = default!;
-   public string PostLogoutRedirectPath { get; init; } = default!;
-   public string LoopbackRedirectPath { get; init; } = default!;
-   public ClientType Type { get; init; } = ClientType.Public;
 }
 
 public static class AuthServerSecretKeys {

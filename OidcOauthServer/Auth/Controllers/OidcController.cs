@@ -15,6 +15,14 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OidcOauthServer.Auth.Endpoints;
 
+/// <summary>
+/// OpenID Connect protocol endpoints:
+/// - Authorization (/connect/authorize)
+/// - Token issuance (/connect/token)
+/// - UserInfo (/connect/userinfo)
+///
+/// This controller bridges ASP.NET Identity and OpenIddict.
+/// </summary>
 [ApiController]
 public sealed class OidcController(
    UserManager<ApplicationUser> users,
