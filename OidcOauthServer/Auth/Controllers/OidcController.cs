@@ -27,40 +27,48 @@ namespace OidcOauthServer.Auth.Endpoints;
 public sealed class OidcController(
    UserManager<ApplicationUser> users,
    SignInManager<ApplicationUser> signIn,
-   IOptions<AuthServerOptions> authOptions
-) : Controller
-{
+   IOptions<AuthServerOptions> authOptions,
+   ILogger<OidcController> logger
+) : Controller {
    private readonly AuthServerOptions _auth = authOptions.Value;
 
    // --------------------------------------------------------------------
    // /connect/authorize
    // --------------------------------------------------------------------
    [HttpGet("/" + AuthServerOptions.AuthorizationEndpointPath)]
-   public async Task<IActionResult> Authorize(CancellationToken ct)
-   {
+   public async Task<IActionResult> Authorize(CancellationToken ct) {
       var request = HttpContext.GetOpenIddictServerRequest()
          ?? throw new InvalidOperationException("OpenID Connect request missing.");
+
+      logger.LogInformation(
+         "Authorize request: client_id='{ClientId}', redirect_uri='{RedirectUri}', " +
+         "scope='{Scope}', response_type='{ResponseType}'",
+         request.ClientId, request.RedirectUri, request.Scope, request.ResponseType);
 
       // Build return URL for post-login continuation
       var returnUrl = Request.PathBase + Request.Path + Request.QueryString;
 
       // Explicitly authenticate using the Identity application cookie
       var authResult = await HttpContext.AuthenticateAsync(
-         IdentityConstants.ApplicationScheme
-      );
+         IdentityConstants.ApplicationScheme);
 
-      if (!authResult.Succeeded)
-      {
-         return Challenge(
-            new AuthenticationProperties { RedirectUri = returnUrl },
-            IdentityConstants.ApplicationScheme
-         );
+      if (!authResult.Succeeded) {
+         logger.LogInformation(
+            "Authorize: no Identity cookie -> challenge, returnUrl='{ReturnUrl}'",
+            returnUrl);
+
+         return Challenge(new AuthenticationProperties { RedirectUri = returnUrl },
+            IdentityConstants.ApplicationScheme);
       }
 
       // Load domain user
       var user = await users.GetUserAsync(authResult.Principal!);
-      if (user is null)
-      {
+      if (user is null) {
+         logger.LogWarning(
+            "Authorize: Identity cookie principal has no user -> challenge, returnUrl='{ReturnUrl}'",
+            returnUrl
+         );
+
          return Challenge(
             new AuthenticationProperties { RedirectUri = returnUrl },
             IdentityConstants.ApplicationScheme
@@ -70,104 +78,94 @@ public sealed class OidcController(
       // Create principal from ASP.NET Identity
       var principal = await signIn.CreateUserPrincipalAsync(user);
       var identity = (ClaimsIdentity)principal.Identity!;
-      
-      // -----------------------------------------------------------------
-      // Mandatory OIDC subject (sub)
-      // -----------------------------------------------------------------
+
+      //--- Mandatory OIDC subject (sub) --------------------------------------
       var subject =
          principal.FindFirstValue(ClaimTypes.NameIdentifier)
          ?? user.Id;
 
       principal.SetClaim(AuthClaims.Subject, subject);
 
-      // -----------------------------------------------------------------
-      // Profile / standard claims
-      // -----------------------------------------------------------------
+      //--- Profile / standard claims ------------------------------------------
       if (!string.IsNullOrWhiteSpace(user.Email))
          identity.AddClaim(new Claim(AuthClaims.Email, user.Email));
 
       if (!string.IsNullOrWhiteSpace(user.UserName))
          identity.AddClaim(new Claim(AuthClaims.PreferredUsername, user.UserName));
 
-      // -----------------------------------------------------------------
-      // Domain-specific claims
-      // -----------------------------------------------------------------
-      identity.AddClaim(new Claim(
-         AuthClaims.AccountType,
-         user.AccountType
-      ));
+      //--- Domain-specific claims ---------------------------------------------
+      identity.AddClaim(new Claim(AuthClaims.AccountType, user.AccountType));
 
       // Admin rights (bitmask enum → int → string)
-      identity.AddClaim(new Claim(
-         AuthClaims.AdminRights,
-         ((int)user.AdminRights).ToString()
-      ));
+      identity.AddClaim(new Claim(AuthClaims.AdminRights,
+         ((int)user.AdminRights).ToString()));
 
       // Lifecycle timestamps (ISO-8601, stable for all clients)
-      identity.AddClaim(new Claim(
-         AuthClaims.CreatedAt,
-         user.CreatedAt.ToUniversalTime().ToString("O")
-      ));
+      identity.AddClaim(new Claim(AuthClaims.CreatedAt, 
+         user.CreatedAt.ToUniversalTime().ToString("O")));
 
-      identity.AddClaim(new Claim(
-         AuthClaims.UpdatedAt,
-         user.UpdatedAt.ToUniversalTime().ToString("O")
-      ));
+      identity.AddClaim(new Claim(AuthClaims.UpdatedAt,
+         user.UpdatedAt.ToUniversalTime().ToString("O")));
 
-      
-      // -----------------------------------------------------------------
-      // Scopes & resources
-      // -----------------------------------------------------------------
-      principal.SetScopes(request.GetScopes());
+      //--- Scopes & resources -------------------------------------------------
+      var scopes = request.GetScopes().ToArray();
+      principal.SetScopes(scopes);
       principal.SetResources(_auth.ScopeApi);
 
-      // -----------------------------------------------------------------
-      // Destinations mapping
-      // -----------------------------------------------------------------
+      logger.LogInformation(
+         "Authorize: user='{UserName}', sub='{Sub}', scopes=[{Scopes}]",
+         user.UserName, subject, string.Join(", ", scopes));
+      
+      //--- Destinations mapping -----------------------------------------------
       foreach (var claim in principal.Claims)
          claim.SetDestinations(
-            ClaimDestinations.GetDestinations(claim, principal)
-         );
+            ClaimDestinations.GetDestinations(claim, principal));
 
-      return SignIn(
-         principal,
-         OpenIddictServerAspNetCoreDefaults.AuthenticationScheme
-      );
+      return SignIn(principal,
+         OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
    }
 
    // --------------------------------------------------------------------
    // /connect/token
    // --------------------------------------------------------------------
    [HttpPost("/" + AuthServerOptions.TokenEndpointPath)]
-   public async Task<IActionResult> Token(CancellationToken ct)
-   {
+   public async Task<IActionResult> Token(CancellationToken ct) {
       var request = HttpContext.GetOpenIddictServerRequest()
          ?? throw new InvalidOperationException("OpenID Connect request missing.");
 
-      // Authorization Code / Refresh Token flow
+      logger.LogInformation(
+         "Token request: grant_type='{GrantType}', client_id='{ClientId}', scope='{Scope}'",
+         request.GrantType, request.ClientId, request.Scope);
+
+      //--- Authorization Code / Refresh Token flow ----------------------------
       if (request.IsAuthorizationCodeGrantType() ||
-          request.IsRefreshTokenGrantType()
-      ) {
+          request.IsRefreshTokenGrantType()) {
          var result = await HttpContext.AuthenticateAsync(
-            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme
-         );
+            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+
+         logger.LogInformation(
+            "Token: code/refresh -> issuing tokens for client_id='{ClientId}'",
+            request.ClientId);
 
          return SignIn(
             result.Principal!,
-            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme
-         );
+            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
       }
 
-      // Client Credentials flow
+      //--- Client Credentials flow --------------------------------------------
       if (request.IsClientCredentialsGrantType()) {
+         logger.LogInformation(
+            "Token: client_credentials -> issuing access token for client_id='{ClientId}'",
+            request.ClientId);
+
          var identity = new ClaimsIdentity(
             OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-         
+
          identity.AddClaim(new Claim(AuthClaims.Subject, request.ClientId!));
          identity.AddClaim(new Claim(AuthClaims.AccountType, "service"));
 
          var principal = new ClaimsPrincipal(identity);
-         
+
          principal.SetScopes(request.GetScopes());
          principal.SetResources(_auth.ScopeApi);
 
@@ -176,9 +174,12 @@ public sealed class OidcController(
 
          return SignIn(
             principal,
-            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme
-         );
+            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
       }
+
+      logger.LogWarning(
+         "Token: unsupported grant_type '{GrantType}'",
+         request.GrantType);
 
       return BadRequest(new { error = "unsupported_grant_type" });
    }
@@ -186,21 +187,26 @@ public sealed class OidcController(
    // --------------------------------------------------------------------
    // /connect/userinfo
    // --------------------------------------------------------------------
-   [Authorize(
-      AuthenticationSchemes =
-         OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme
-   )]
+   [Authorize(AuthenticationSchemes =
+      OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
    [HttpGet("/" + AuthServerOptions.UserInfoEndpointPath)]
-   public IActionResult UserInfo() => Ok(new
-   {
-      sub = User.FindFirst(AuthClaims.Subject)?.Value,
-      email = User.FindFirst(AuthClaims.Email)?.Value,
-      preferred_username = User.FindFirst(AuthClaims.PreferredUsername)?.Value,
-      account_type = User.FindFirst(AuthClaims.AccountType)?.Value,
-      customer_id = User.FindFirst("customer_id")?.Value,
-      employee_id = User.FindFirst("employee_id")?.Value,
-      admin_rights = User.FindFirst(AuthClaims.AdminRights)?.Value
-   });
+   public IActionResult UserInfo() {
+      logger.LogInformation(
+         "UserInfo request: sub='{Sub}', azp='{Azp}'",
+         User.FindFirst(AuthClaims.Subject)?.Value,
+         User.FindFirst("azp")?.Value
+      );
+
+      return Ok(new {
+         sub = User.FindFirst(AuthClaims.Subject)?.Value,
+         preferred_username = User.FindFirst(AuthClaims.PreferredUsername)?.Value,
+         email = User.FindFirst(AuthClaims.Email)?.Value,
+         account_type = User.FindFirst(AuthClaims.AccountType)?.Value,
+         admin_rights = User.FindFirst(AuthClaims.AdminRights)?.Value,
+         created_at = User.FindFirst(AuthClaims.CreatedAt)?.Value,
+         updated_at = User.FindFirst(AuthClaims.UpdatedAt)?.Value
+      });
+   }
 
    /*
    ======================================================================

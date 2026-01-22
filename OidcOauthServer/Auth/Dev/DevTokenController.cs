@@ -18,8 +18,7 @@ public sealed class DevTokenController(
    UserManager<ApplicationUser> users,
    SignInManager<ApplicationUser> signIn,
    IOptions<AuthServerOptions> authOptions
-) : Controller
-{
+) : Controller {
    /// <summary>
    /// Development-only token endpoint.
    ///
@@ -31,14 +30,12 @@ public sealed class DevTokenController(
    public async Task<IActionResult> Token(
       [FromBody] DevLoginDto dto,
       CancellationToken ct
-   )
-   {
+   ) {
       if (!env.IsDevelopment())
          return NotFound();
 
       if (string.IsNullOrWhiteSpace(dto.Email) ||
-          string.IsNullOrWhiteSpace(dto.Password))
-      {
+          string.IsNullOrWhiteSpace(dto.Password)) {
          return BadRequest(new { error = "email_and_password_required" });
       }
 

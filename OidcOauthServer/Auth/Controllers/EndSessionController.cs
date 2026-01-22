@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
-
 namespace OidcOauthServer.Auth.Controllers;
 
 /// <summary>
@@ -16,8 +14,13 @@ namespace OidcOauthServer.Auth.Controllers;
 [ApiController]
 public sealed class EndSessionController(
    IOpenIddictApplicationManager applicationManager,
+   SignInManager<IdentityUser> _signInManager,
    ILogger<EndSessionController> logger
 ) : Controller {
+   
+   // --------------------------------------------------------------------
+   // /connect/logout
+   // --------------------------------------------------------------------
    [HttpGet("/connect/logout")]
    public async Task<IActionResult> Logout(
       [FromQuery(Name = "post_logout_redirect_uri")]
@@ -25,50 +28,58 @@ public sealed class EndSessionController(
       [FromQuery(Name = "client_id")] string? clientId,
       CancellationToken ct = default
    ) {
-      // Safe fallback if the redirect URI is missing or invalid
+      logger.LogInformation(
+         "Logout request received. post_logout_redirect_uri='{Uri}', client_id='{ClientId}'",
+         postLogoutRedirectUri, clientId
+      );
+      
+      // 1) Determine a safe redirect target
+      // Default fallback to prevent open redirects.
       const string safeFallback = "/";
 
-      // If no redirect was requested, simply sign out locally.
-      if (string.IsNullOrWhiteSpace(postLogoutRedirectUri)) {
-         return SignOut(
-            new AuthenticationProperties { RedirectUri = safeFallback },
-            IdentityConstants.ApplicationScheme
-         );
-      }
+      // The final redirect target after logout.
+      var redirect = safeFallback;
 
-      // Only absolute URIs are allowed (OIDC requirement).
-      if (!Uri.TryCreate(postLogoutRedirectUri, UriKind.Absolute, out var requestedUri)) {
+      // Validate the provided post_logout_redirect_uri:
+      // - must be absolute (OIDC requirement)
+      // - must be registered for the given client
+      if (Uri.TryCreate(postLogoutRedirectUri, UriKind.Absolute, out var requestedUri)) {
+         var isAllowed = await IsPostLogoutRedirectAllowedAsync(requestedUri, clientId, ct);
+
+         if (isAllowed) {
+            redirect = requestedUri.ToString();
+            logger.LogInformation(
+               "Logout approved. Redirecting to '{Uri}'",
+               redirect
+            );
+         }
+         else {
+            logger.LogWarning(
+               "Logout rejected: unregistered post_logout_redirect_uri '{Uri}' for client_id '{ClientId}'",
+               requestedUri, clientId ?? "(none)"
+            );
+         }
+      }
+      else if (!string.IsNullOrWhiteSpace(postLogoutRedirectUri)) {
          logger.LogWarning(
             "Logout rejected: invalid post_logout_redirect_uri '{Uri}'",
             postLogoutRedirectUri
          );
-
-         return SignOut(
-            new AuthenticationProperties { RedirectUri = safeFallback },
-            IdentityConstants.ApplicationScheme
-         );
       }
+      
+      // 2) Terminate the local Identity session (server-side logout)
+      // This is the critical step that actually logs the user out on the
+      // authorization server by clearing the Identity authentication cookies.
+      await _signInManager.SignOutAsync();
 
-      // Validate the redirect URI against the registered OpenIddict clients.
-      var isAllowed = await IsPostLogoutRedirectAllowedAsync(
-         requestedUri,
-         clientId,
-         ct
-      );
-
-      if (!isAllowed) {
-         logger.LogWarning(
-            "Logout rejected: unregistered post_logout_redirect_uri '{Uri}'",
-            requestedUri
-         );
-      }
-
-      return SignOut(
-         new AuthenticationProperties {
-            RedirectUri = isAllowed ? requestedUri.ToString() : safeFallback
-         },
-         IdentityConstants.ApplicationScheme
-      );
+      // Optional: if additional Identity schemes are used, they can be
+      // explicitly signed out as well.
+      //
+      // await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+      // await HttpContext.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
+      
+      // 3) Redirect back to the client application
+      return Redirect(redirect);
    }
 
    /// <summary>
@@ -118,14 +129,13 @@ public sealed class EndSessionController(
    /// Compares URIs in a tolerant but secure way:
    /// - ignores trailing slashes
    /// - enforces scheme/host/path equality
+   /// - ignores query and fragment (standard OIDC behavior)
    /// </summary>
    private static bool UriEquals(Uri a, Uri b) {
       var leftA = a.GetLeftPart(UriPartial.Path).TrimEnd('/');
       var leftB = b.GetLeftPart(UriPartial.Path).TrimEnd('/');
 
-      return string.Equals(leftA, leftB, StringComparison.OrdinalIgnoreCase)
-         && string.Equals(a.Query, b.Query, StringComparison.Ordinal)
-         && string.Equals(a.Fragment, b.Fragment, StringComparison.Ordinal);
+      return string.Equals(leftA, leftB, StringComparison.OrdinalIgnoreCase);
    }
 }
 

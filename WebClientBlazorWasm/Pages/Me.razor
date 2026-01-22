@@ -1,0 +1,152 @@
+@page "/me"
+@using System.Net.Http.Headers
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject IAccessTokenProvider TokenProvider
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<AuthorizeView>
+    <Authorized>
+        <h2>Me (OIDC Debug)</h2>
+
+        <p><b>User:</b> @_userName</p>
+
+        @using Microsoft.AspNetCore.Components.Authorization
+        @inject AuthenticationStateProvider AuthState
+
+        <h3>Claims</h3>
+        <ul>
+            @foreach (var c in _claims) {
+                <li><b>@c.Type</b>: @c.Value</li>
+            }
+        </ul>
+
+
+        <h3>Tokens (DEBUG)</h3>
+        <p><b>expires:</b> @_expires</p>
+
+        <h4>access_token</h4>
+        <pre style="white-space:pre-wrap">@_accessToken</pre>
+
+        <button class="btn btn-primary" @onclick="LoadDebug">Reload</button>
+
+        <hr/>
+
+        <h3>API Call (Bearer)</h3>
+        <p>
+            <b>GET</b>
+            <input style="width: 70%" @bind="ApiUrl"/>
+        </p>
+        <button class="btn btn-success" @onclick="CallApi">Call API</button>
+
+        @if (!string.IsNullOrWhiteSpace(_apiStatus)) {
+            <p><b>Status:</b> @_apiStatus</p>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_apiResponse)) {
+            <h4>Response</h4>
+            <pre style="white-space:pre-wrap">@_apiResponse</pre>
+        }
+
+        <hr/>
+
+        <h3>Claims</h3>
+        <ul>
+            @foreach (var c in _claims) {
+                <li><b>@c.Type</b>: @c.Value</li>
+            }
+        </ul>
+
+        <p>
+            <a href="/" @onclick:preventDefault="true" @onclick="GoHome">Home</a> |
+            <a href="authentication/logout" @onclick:preventDefault="true" @onclick="Logout">Logout</a>
+        </p>
+    </Authorized>
+
+    <NotAuthorized>
+        <h2>Me (OIDC Debug)</h2>
+        <p>Not logged in.</p>
+
+        <a href="authentication/login" @onclick:preventDefault="true" @onclick="Login">Login</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+    public string ApiUrl { get; set; } = "https://localhost:7001/api/test/secure";
+
+    private string? _userName;
+    private string? _accessToken;
+    private string? _expires;
+
+    private IEnumerable<System.Security.Claims.Claim> _oidcClaims = [];
+
+    private List<(string Type, string Value)> _claims = new();
+
+    private string? _apiStatus;
+    private string? _apiResponse;
+
+    protected override async Task OnInitializedAsync() {
+        var state = await AuthState.GetAuthenticationStateAsync();
+        _oidcClaims = state.User.Claims;
+
+        // Load debug info on init
+        await LoadDebug();
+    }
+
+    private void GoHome() => Nav.NavigateTo("/", forceLoad: true);
+    private void Login() => Nav.NavigateTo("authentication/login", forceLoad: true);
+    private void Logout() => Nav.NavigateTo("@Logout", forceLoad: true);
+
+    private async Task LoadDebug() {
+        _apiStatus = null;
+        _apiResponse = null;
+
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        _userName = user.Identity?.Name ?? "(no name)";
+
+        _claims = user.Claims
+            .Select(c => (c.Type, c.Value))
+            .OrderBy(c => c.Type)
+            .ToList();
+
+        var tokenResult = await TokenProvider.RequestAccessToken();
+        if (tokenResult.TryGetToken(out var token)) {
+            _accessToken = token.Value;
+            _expires = token.Expires.ToString("u");
+        }
+        else {
+            _accessToken = $"<no access token> ({tokenResult.Status})";
+            _expires = "-";
+        }
+    }
+
+    private async Task CallApi() {
+        _apiStatus = null;
+        _apiResponse = null;
+
+        var tokenResult = await TokenProvider.RequestAccessToken();
+        if (!tokenResult.TryGetToken(out var token)) {
+            _apiStatus = $"Token failed: {tokenResult.Status}";
+            return;
+        }
+
+        try {
+            using var req = new HttpRequestMessage(HttpMethod.Get, ApiUrl);
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
+
+            using var resp = await Http.SendAsync(req);
+            _apiStatus = $"{(int)resp.StatusCode} {resp.ReasonPhrase}";
+            _apiResponse = await resp.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex) {
+            _apiStatus = "Exception";
+            _apiResponse = ex.ToString();
+        }
+    }
+
+}

@@ -14,9 +14,7 @@ public static class ClaimDestinations {
       Claim claim,
       ClaimsPrincipal principal
    ) {
-      // -----------------------------------------------------------------------      
-      // IdentityToken
-      // -----------------------------------------------------------------------
+      //--- IdentityToken ------------------------------------------------------
       // Mandatory OIDC subject
       if (claim.Type == AuthClaims.Subject)
          return new[] { Destinations.AccessToken, Destinations.IdentityToken };
@@ -36,9 +34,7 @@ public static class ClaimDestinations {
             ? new[] { Destinations.IdentityToken }
             : Array.Empty<string>();
       
-      // -----------------------------------------------------------------------      
-      // IdentityToken + AccessToken
-      // -----------------------------------------------------------------------
+      //--- IdentityToken + AccessToken ----------------------------------------
       // Lifecycle / housekeeping (debuggable in id_token, usable in API)
       if (claim.Type 
           is AuthClaims.CreatedAt 
@@ -46,9 +42,7 @@ public static class ClaimDestinations {
       ) return new[] { Destinations.AccessToken, Destinations.IdentityToken };
       
       
-      // -----------------------------------------------------------------------      
-      // AccessToken only
-      // -----------------------------------------------------------------------
+      //--- AccessToken only ---------------------------------------------------
       // Domain-specific claims → access token only
       if (claim.Type 
           is AuthClaims.AccountType

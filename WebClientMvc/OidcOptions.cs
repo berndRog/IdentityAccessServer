@@ -13,7 +13,6 @@ public sealed class OidcClientOptions {
    public string[] Scopes { get; init; } = Array.Empty<string>();
 
    // ---- Derived URIs (no string juggling elsewhere) ----
-
    public Uri RedirectUri =>
       new($"{BaseUrl.TrimEnd('/')}{RedirectPath}");
 
@@ -25,10 +24,5 @@ public sealed class OidcClientOptions {
    
    public Uri PostLogoutRedirectFallbackUri =>
       new($"{BaseUrl.TrimEnd('/')}{PostLogoutRedirectFallbackPath}");
-
-   private Uri[] PostLogoutRedirectUris = {
-      new Uri("https://localhost:6020/"),
-      new Uri("https://localhost:6020"),
-      new Uri("https://localhost:6020/signout-callback-oidc")
-   };
+   
 }

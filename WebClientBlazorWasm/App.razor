@@ -1,17 +1,8 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
-@using WebClientBlazorWasm.Shared
-
+﻿@*
 <CascadingAuthenticationState>
   <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
-      <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-        <NotAuthorized>
-          <RedirectToLogin />
-        </NotAuthorized>
-        <Authorizing>
-          <p>Authorizing...</p>
-        </Authorizing>
-      </AuthorizeRouteView>
+      <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
     </Found>
     <NotFound>
       <LayoutView Layout="@typeof(MainLayout)">
@@ -20,3 +11,39 @@
     </NotFound>
   </Router>
 </CascadingAuthenticationState>
+*@
+
+
+
+
+@using Microsoft.AspNetCore.Components.Authorization
+
+<CascadingAuthenticationState>
+  <Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+      <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+    </Found>
+
+    <NotFound>
+      <LayoutView Layout="@typeof(MainLayout)">
+        <p>Not found</p>
+      </LayoutView>
+    </NotFound>
+  </Router>
+</CascadingAuthenticationState>
+
+
+
+@*@using Microsoft.AspNetCore.Components.Authorization
+
+<CascadingAuthenticationState>
+  <Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+      <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+        <NotAuthorized>
+          <RedirectToLogin />
+        </NotAuthorized>
+      </AuthorizeRouteView>
+    </Found>
+  </Router>
+</CascadingAuthenticationState>*@

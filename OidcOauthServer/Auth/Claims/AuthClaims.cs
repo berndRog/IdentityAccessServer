@@ -56,21 +56,3 @@ public static class AuthClaims {
    /// </summary>
    public const string UpdatedAt = "updated_at";
 }
-
-// public static class AuthClaims {
-//    // Standard (OIDC / JWT)
-//    public const string Subject = "sub";
-//    public const string Email = "email";
-//    public const string Name = "name";
-//
-//    // Profile (OIDC "profile" scope)
-//    public const string GivenName = "given_name";
-//    public const string FamilyName = "family_name";
-//    public const string Birthdate = "birthdate";
-//    public const string Gender = "gender";
-//    public const string PreferredUsername = "preferred_username";
-//
-//    // Custom (domain-specific)
-//    public const string AccountType = "account_type";   // customer | employee
-//    public const string AdminRights = "admin_rights";   // int bitmask
-// }
