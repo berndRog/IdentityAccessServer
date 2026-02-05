@@ -14,33 +14,20 @@ public static class ClaimDestinations {
       Claim claim,
       ClaimsPrincipal principal
    ) {
-      //--- IdentityToken ------------------------------------------------------
+      //--- IdentityToken + AccessToken ----------------------------------------
       // Mandatory OIDC subject
       if (claim.Type == AuthClaims.Subject)
-         return new[] { Destinations.AccessToken, Destinations.IdentityToken };
-
-      // Standard identity/profile-like claims
-      // NOTE: In our minimal setup we do not maintain given_name/family_name/etc.
-      // We only emit email + preferred_username.
-      if (claim.Type 
-          is AuthClaims.Email 
-          // or AuthClaims.Name
-          // or AuthClaims.GivenName
-          // or AuthClaims.FamilyName
-          // or AuthClaims.Birthdate
-          // or AuthClaims.Gender
-          or AuthClaims.PreferredUsername
-      ) return principal.HasScope(Scopes.Profile)
-            ? new[] { Destinations.IdentityToken }
+         return new[] { Destinations.IdentityToken, Destinations.AccessToken };
+  
+      // preferred_username -> profile scope, UI only
+      if (claim.Type == AuthClaims.PreferredUsername)
+         return principal.HasScope(Scopes.Profile)
+            ? new[] { Destinations.IdentityToken, Destinations.AccessToken }
             : Array.Empty<string>();
       
-      //--- IdentityToken + AccessToken ----------------------------------------
       // Lifecycle / housekeeping (debuggable in id_token, usable in API)
-      if (claim.Type 
-          is AuthClaims.CreatedAt 
-          or AuthClaims.UpdatedAt
-      ) return new[] { Destinations.AccessToken, Destinations.IdentityToken };
-      
+      if (claim.Type is AuthClaims.CreatedAt or AuthClaims.UpdatedAt) 
+         return new[] { Destinations.AccessToken, Destinations.IdentityToken };
       
       //--- AccessToken only ---------------------------------------------------
       // Domain-specific claims → access token only

@@ -142,7 +142,7 @@ public sealed class SeedHostedService(
          Requirements = {
             Requirements.Features.ProofKeyForCodeExchange
          }
-      };
+      }; 
 
       // Choose which APIs Blazor may call:
       AddApiScopes(blazor, "CarRentalApi"); // add more if needed

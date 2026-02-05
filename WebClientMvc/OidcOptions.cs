@@ -12,7 +12,6 @@ public sealed class OidcClientOptions {
    public string RedirectPath                 { get; init; } = default!;
    public string SignedOutCallbackPath        { get; init; } = default!;
    public string PostLogoutRedirectPath       { get; init; } = default!;
-   public string PostLogoutRedirectFallbackPath { get; init; } = default!;
 
    public string[] Scopes { get; init; } = Array.Empty<string>();
 
@@ -40,6 +39,4 @@ public sealed class OidcClientOptions {
    public Uri PostLogoutRedirectUri =>
       new($"{NormalizedBaseUrl}{NormalizePath(PostLogoutRedirectPath)}");
 
-   public Uri PostLogoutRedirectFallbackUri =>
-      new($"{NormalizedBaseUrl}{NormalizePath(PostLogoutRedirectFallbackPath)}");
 }

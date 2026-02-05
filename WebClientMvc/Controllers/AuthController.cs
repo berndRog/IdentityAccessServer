@@ -8,10 +8,10 @@ namespace WebClientMvc.Controllers;
 
 public sealed class AuthController : Controller {
    [HttpGet("~/login")]
-   public IActionResult Login(string returnUrl = "/") {
-
+   public IActionResult Login(string returnUrl = "/customer/provisioned") {
+      // after login, redirect to the given returnUrl
       if (!Url.IsLocalUrl(returnUrl))
-         returnUrl = "/";
+         returnUrl = "/customer/provisioned";
 
       return Challenge(
          new AuthenticationProperties { RedirectUri = returnUrl },
@@ -19,12 +19,11 @@ public sealed class AuthController : Controller {
       );
    }
 
-
    [Authorize]
    [HttpGet("~/logout")]
    public IActionResult Logout() =>
       SignOut(
-         new AuthenticationProperties { RedirectUri = "/" },
+         new AuthenticationProperties { RedirectUri = Url.Content("~/") },
          OpenIdConnectDefaults.AuthenticationScheme,
          CookieAuthenticationDefaults.AuthenticationScheme
       );

@@ -1,0 +1,43 @@
+@{
+  Layout = null;
+  var title = ViewData["Title"] as string ?? "WebClientMvc";
+}
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@title</title>
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-light">
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+      <div class="card shadow-sm mt-5">
+        <div class="card-body p-4">
+
+          <h1 class="h4 mb-1">@title</h1>
+
+          @if (ViewData["Subtitle"] is string subtitle && !string.IsNullOrWhiteSpace(subtitle))
+          {
+            <p class="text-muted mb-4">@subtitle</p>
+          }
+
+          @RenderBody()
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@RenderSection("Scripts", required: false)
+</body>
+</html>

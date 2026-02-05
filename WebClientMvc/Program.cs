@@ -7,13 +7,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProviderFromHttpContext>();
+
 builder.Services
    .AddOptions<OidcClientOptions>()
    .Bind(builder.Configuration.GetSection("AuthServer"))
    .ValidateDataAnnotations()
    .ValidateOnStart();
 
-builder.Services.AddHttpClient<CustomersApiClient>(c => {
+builder.Services.AddHttpClient<ICustomersApiClient, CustomersApiClient>(c => {
    c.BaseAddress = new Uri("https://localhost:8010/carrentalapi/v1/");
 });
 
@@ -47,15 +50,11 @@ builder.Services.AddAuthentication(authOpt => {
       openIdOpt.ResponseType = "code";
      
       openIdOpt.SaveTokens = true;
-      openIdOpt.GetClaimsFromUserInfoEndpoint = true;
-
-      // Login callback (muss in OpenIddict RedirectUris stehen)
+      openIdOpt.GetClaimsFromUserInfoEndpoint = false;
+      
       openIdOpt.CallbackPath = oidc.RedirectPath;
-
-      // Logout callback (lokaler Endpoint in MVC, Standard ist genau das)
       openIdOpt.SignedOutCallbackPath = oidc.SignedOutCallbackPath;
       openIdOpt.SignedOutRedirectUri = oidc.PostLogoutRedirectUri.ToString();
-      
       
       openIdOpt.Scope.Clear();
       foreach (var s in oidc.Scopes)

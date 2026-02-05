@@ -76,7 +76,7 @@ public sealed class AuthServerOptions {
       CombineBaseAndPath(BlazorWasm.BaseUrl, BlazorWasm.RedirectPath);
    public Uri BlazorWasmPostLogoutRedirectUri() =>
       CombineBaseAndPath(BlazorWasm.BaseUrl, BlazorWasm.PostLogoutRedirectPath);
-
+   
    public Uri WebMvcRedirectUri() =>
       CombineBaseAndPath(WebMvc.BaseUrl, WebMvc.RedirectPath);
    public Uri WebMvcPostLogoutRedirectUri() =>
