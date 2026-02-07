@@ -7,10 +7,6 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <RootNamespace>OidcOauthServer</RootNamespace>
-    <UserSecretsId>0bca5cfd-a510-4163-991e-d42dfe86148f</UserSecretsId>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <UserSecretsId>3a9b7c0c-4a5d-4f4a-9e7f-9d2c6c9a7f42</UserSecretsId>
   </PropertyGroup>
   

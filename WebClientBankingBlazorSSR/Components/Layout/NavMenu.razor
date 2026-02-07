@@ -1,12 +1,16 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
+
+<div class="top-row ps-3 navbar navbar-dark">
   <div class="container-fluid">
     <a class="navbar-brand" href="">WebClientBankingBlazorSSR</a>
+    <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
   </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
   <nav class="nav flex-column">
     <div class="nav-item px-3">
       <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
@@ -15,15 +19,37 @@
     </div>
 
     <div class="nav-item px-3">
-      <NavLink class="nav-link" href="counter">
-        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+      <NavLink class="nav-link" href="profile">
+        <span class="bi bi-person-circle" aria-hidden="true"></span>
+        Profil
       </NavLink>
     </div>
 
-    <div class="nav-item px-3">
-      <NavLink class="nav-link" href="weather">
-        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-      </NavLink>
-    </div>
+    <AuthorizeView>
+      <Authorized>
+        <div class="nav-item px-3">
+          <a class="nav-link" href="@LogoutUrl">Logout</a>
+        </div>
+      </Authorized>
+      <NotAuthorized>
+        <div class="nav-item px-3">
+          <a class="nav-link" href="@LoginUrl">Login</a>
+        </div>
+      </NotAuthorized>
+    </AuthorizeView>
   </nav>
 </div>
+
+@code {
+  private bool collapseNavMenu = true;
+  private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+  // Owner-Login (wenn du Owner/Employee trennst)
+  private string LoginUrl =>
+    "/login/owner?returnUrl=" + Uri.EscapeDataString(Nav.ToBaseRelativePath(Nav.Uri).Insert(0, "/"));
+
+  // serverseitiger Logout (Cookie + OIDC)
+  private string LogoutUrl => "/logout";
+
+  private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
+}

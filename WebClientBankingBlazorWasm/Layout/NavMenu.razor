@@ -41,7 +41,7 @@
   @code {
     
   private string Authority =>
-    (Config["AuthServer:Authority"] ?? "https://localhost:7001").TrimEnd('/');
+    (Config["AuthServer:Authority"] ?? "https://localhost:7010").TrimEnd('/');
 
   private string LogoutUrl =>
     $"{Authority}/connect/logout?post_logout_redirect_uri={Uri.EscapeDataString(Nav.BaseUri)}";

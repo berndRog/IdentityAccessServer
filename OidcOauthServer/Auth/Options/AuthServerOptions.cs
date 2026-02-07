@@ -61,6 +61,7 @@ public sealed class AuthServerOptions {
    // ------------------------------------------------------------------
    public ClientOptions BlazorWasm { get; init; } = default!;
    public ClientOptions WebMvc { get; init; } = default!;
+   public ClientOptions WebBlazorSsr { get; init; } = default!;
    public AndroidClientOptions Android { get; init; } = default!;
    public ClientOptions ServiceClient { get; init; } = default!;
    
@@ -81,7 +82,12 @@ public sealed class AuthServerOptions {
       CombineBaseAndPath(WebMvc.BaseUrl, WebMvc.RedirectPath);
    public Uri WebMvcPostLogoutRedirectUri() =>
       CombineBaseAndPath(WebMvc.BaseUrl, WebMvc.PostLogoutRedirectPath);
-   
+
+   public Uri WebBlazorSsrRedirectUri() =>
+      CombineBaseAndPath(WebBlazorSsr.BaseUrl, WebBlazorSsr.RedirectPath);
+   public Uri WebBlazorSsrPostLogoutRedirectUri() =>
+      CombineBaseAndPath(WebBlazorSsr.BaseUrl, WebBlazorSsr.PostLogoutRedirectPath);
+
    public Uri AndroidCustomSchemeRedirectUri() =>
       new (Android.CustomSchemeRedirectUriString, UriKind.Absolute);
    public Uri AndroidLoopbackRedirectUri() =>
@@ -107,5 +113,6 @@ public enum ClientType {
 
 public static class AuthServerSecretKeys {
    public const string WebMvcClientSecret = "AuthServer:WebMvc:ClientSecret";
+   public const string WebBlazorSsrSecret = "AuthServer:WebBlazorSsr:ClientSecret";
    public const string ServiceClientSecret = "AuthServer:ServiceClient:ClientSecret";
 }

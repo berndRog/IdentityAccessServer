@@ -180,7 +180,36 @@ public sealed class SeedHostedService(
       await UpsertAsync(webMvc, requiresSecret: true);
 
       // ------------------------------------------------------------
-      // 3) Android (Public + Code + PKCE)
+      // 3) Web BlazorSSR (Confidential + Code)
+      // ------------------------------------------------------------
+      var webBlazorSsr = new OpenIddictApplicationDescriptor {
+         ClientId = options.WebBlazorSsr.ClientId,
+         ClientSecret = config[AuthServerSecretKeys.WebBlazorSsrSecret],
+         DisplayName = "WebClient Blazor SSR",
+         ClientType = ClientTypes.Confidential,
+
+         RedirectUris = { options.WebBlazorSsrRedirectUri() },
+         PostLogoutRedirectUris = { options.WebBlazorSsrPostLogoutRedirectUri() },
+
+         Permissions = {
+            Permissions.Endpoints.Authorization,
+            Permissions.Endpoints.Token,
+            Permissions.Endpoints.EndSession,
+
+            Permissions.GrantTypes.AuthorizationCode,
+            Permissions.ResponseTypes.Code,
+
+            Permissions.Prefixes.Scope + Scopes.OpenId,
+            Permissions.Prefixes.Scope + Scopes.Profile
+         }
+      };
+
+      AddApiScopes(webBlazorSsr, "BankingApi");
+
+      await UpsertAsync(webBlazorSsr, requiresSecret: true);
+      
+      // ------------------------------------------------------------
+      // 4) Android (Public + Code + PKCE)
       // ------------------------------------------------------------
       var android = new OpenIddictApplicationDescriptor {
          ClientId = options.Android.ClientId,
@@ -217,7 +246,7 @@ public sealed class SeedHostedService(
       await UpsertAsync(android, requiresSecret: false);
 
       // ------------------------------------------------------------
-      // 4) Service Client (Confidential + Client Credentials)
+      // 5) Service Client (Confidential + Client Credentials)
       // ------------------------------------------------------------
       var service = new OpenIddictApplicationDescriptor {
          ClientId = options.ServiceClient.ClientId,

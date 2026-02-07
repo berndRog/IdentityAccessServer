@@ -1,0 +1,16 @@
+@typeparam TModel
+
+<EditForm Model="Model" OnValidSubmit="OnSave">
+  <DataAnnotationsValidator />
+  <ValidationSummary />
+
+  <!-- exakt dein Bootstrap Layout -->
+  <!-- Inputs binden an Model.Firstname etc. -->
+
+  <button type="submit" class="btn btn-primary">Speichern</button>
+</EditForm>
+
+@code {
+  [Parameter, EditorRequired] public TModel Model { get; set; } = default!;
+  [Parameter, EditorRequired] public EventCallback OnSave { get; set; }
+}

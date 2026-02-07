@@ -32,4 +32,6 @@ public sealed class OwnersClient(HttpClient http) {
       return (await response.Content.ReadFromJsonAsync<OwnerProfileDto>(cancellationToken: ct))
          ?? throw new InvalidOperationException("Empty response body.");
    }
+   
+   
 }

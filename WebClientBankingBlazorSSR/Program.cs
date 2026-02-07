@@ -39,7 +39,9 @@ public sealed class Program {
 
    private static void ConfigureOidc(IServiceCollection services, IConfiguration config) {
       var auth = config.GetSection("AuthServer");
+      Console.WriteLine($"SSR ClientId={auth["ClientId"]}, SecretPresent={!string.IsNullOrWhiteSpace(auth["ClientSecret"])}");
 
+      
       services.AddAuthentication(options => {
             options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
@@ -60,7 +62,7 @@ public sealed class Program {
             options.Scope.Clear();
             options.Scope.Add("openid");
             options.Scope.Add("profile");
-            options.Scope.Add("email");
+            //options.Scope.Add("email");
             options.Scope.Add(auth["ApiScope"] ?? "banking_api");
 
             options.RequireHttpsMetadata = true;

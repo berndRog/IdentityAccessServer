@@ -9,6 +9,7 @@
 
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <UserSecretsId>671a9b80-d4f0-4b69-8f5d-26a2963a9feb</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +20,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Profile\OwnerProfilePage.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Profile\ProfileForm.razor" />
   </ItemGroup>
   
   
