@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication;
 
-namespace WebClientBankingBlazorSSR.Hosting;
+namespace BankingBlazorSSR.Hosting;
 
 public sealed class AccessTokenHandler(IHttpContextAccessor ctx) : DelegatingHandler {
    

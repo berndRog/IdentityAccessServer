@@ -4,8 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>WebClientBankingBlazorSSR</AssemblyName>
-    <RootNamespace>WebClientBankingBlazorSSR</RootNamespace>
+    <AssemblyName>BankingBlazorSSR</AssemblyName>
+    <RootNamespace>BankingBlazorSSR</RootNamespace>
 
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>

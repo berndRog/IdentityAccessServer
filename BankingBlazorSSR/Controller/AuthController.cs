@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace WebClientBankingBlazorSSR.Controllers;
+namespace BankingBlazorSSR.Controllers;
 
 [AllowAnonymous]
 public sealed class AuthController : Controller {

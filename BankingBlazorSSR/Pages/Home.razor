@@ -1,7 +1,7 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
-@inject WebClientBankingBlazorSSR.Hosting.Clients.OwnersClient Owners
+@inject BankingBlazorSSR.Hosting.Clients.OwnersClient Owners
 
 <PageTitle>Home</PageTitle>
 
@@ -17,27 +17,26 @@ else if (_error is not null)
 }
 else
 {
-  <p><b>OwnerId:</b> @_me!.Id</p>
-  <p><b>Email:</b> @_me!.Email</p>
-  <p><b>Status:</b> @_me!.Status</p>
+  <p><b>OwnerId:</b> @_ownerId</p>
 
   <hr />
   <p><b>Name:</b> @_profile!.Firstname @_profile!.Lastname</p>
+  <p><b>Email:</b> @_profile!.Email</p>
 }
 
 @code {
   private bool _loading = true;
   private string? _error;
 
-  private WebClientBankingBlazorSSR.Hosting.Dtos.OwnerMeDto? _me;
-  private WebClientBankingBlazorSSR.Hosting.Dtos.OwnerProfileDto? _profile;
+  private Guid _ownerId;
+  private BankingBlazorSSR.Hosting.Dtos.OwnerProfileDto? _profile;
 
   protected override async Task OnInitializedAsync()
   {
     try
     {
-      _me = await Owners.GetMeProvisionedAsync();
-      _profile = await Owners.GetMeProfileAsync();
+      _ownerId = await Owners.ProvisionMeAsync();     // POST, returns Guid
+      _profile = await Owners.GetMeProfileAsync();    // GET, returns OwnerProfileDto
     }
     catch (Exception ex)
     {

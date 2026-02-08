@@ -1,14 +1,23 @@
+using BankingBlazorSSR.Hosting;
+using BankingBlazorSSR.Hosting.Clients;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using WebClientBankingBlazorSSR.Hosting;
-using WebClientBankingBlazorSSR.Hosting.Clients;
-namespace WebClientBankingBlazorSSR;
+namespace BankingBlazorSSR;
 
 public sealed class Program {
    public static void Main(string[] args) {
       var builder = WebApplication.CreateBuilder(args);
 
+      // ----------------------------
+      // Logging
+      // ----------------------------
+      builder.Logging.ClearProviders();
+      builder.Logging.AddConsole();
+      builder.Logging.AddDebug();
+
+      
       ConfigureServices(builder);
 
       var app = builder.Build();
@@ -19,6 +28,25 @@ public sealed class Program {
    }
 
    private static void ConfigureServices(WebApplicationBuilder builder) {
+      
+      builder.Services.AddHttpContextAccessor();
+      builder.Services.AddHttpLogging(o => {
+         o.LoggingFields =
+            HttpLoggingFields.RequestMethod |
+            HttpLoggingFields.RequestPath |
+            HttpLoggingFields.RequestQuery |
+            HttpLoggingFields.RequestHeaders |
+            HttpLoggingFields.ResponseStatusCode |
+            HttpLoggingFields.ResponseHeaders;
+
+         // optional: Bodies (nur DEV, Achtung: kann sensibel sein)
+         o.LoggingFields |= HttpLoggingFields.RequestBody |
+            HttpLoggingFields.ResponseBody;
+
+         o.RequestHeaders.Add("Authorization"); // Achtung: Token wird geloggt (DEV ok, PROD nein)
+         o.MediaTypeOptions.AddText("application/json");
+      });
+
       
       // Blazor SSR + Interactive Server
       builder.Services

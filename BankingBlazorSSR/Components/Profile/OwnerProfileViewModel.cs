@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebClientBankingBlazorSSR.Pages.Profile;
+namespace BankingBlazorSSR.Pages.Profile;
 
 public sealed class OwnerProfileFormModel 
 {

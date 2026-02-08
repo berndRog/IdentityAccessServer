@@ -1,4 +1,4 @@
-namespace WebClientBankingBlazorSSR.Hosting.Dtos;
+namespace BankingBlazorSSR.Hosting.Dtos;
 
 public sealed record OwnerProfileDto(
    string Firstname,

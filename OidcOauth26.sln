@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebClientMvc", "WebClientMv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebClientBankingBlazorWasm", "WebClientBankingBlazorWasm\WebClientBankingBlazorWasm.csproj", "{6E0A2FA7-5373-480D-9E44-7CF5817A7B45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebClientBankingBlazorSSR", "WebClientBankingBlazorSSR\WebClientBankingBlazorSSR.csproj", "{2BD11188-64AB-4ADB-8628-9D10EF774EC9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingBlazorSSR", "BankingBlazorSSR\BankingBlazorSSR.csproj", "{2BD11188-64AB-4ADB-8628-9D10EF774EC9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
