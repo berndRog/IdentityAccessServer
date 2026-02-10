@@ -86,9 +86,13 @@ public class IdentityController(
 
       // Step 2: trigger OIDC end-session (redirect to authorization server)
       await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme, props);
-
+      
+      
       // The OIDC middleware will handle the redirect to the authorization server.
-      return new EmptyResult();
+      new EmptyResult();
+      
+      return LocalRedirect("/");
+      
    }
 
    // /// <summary>
