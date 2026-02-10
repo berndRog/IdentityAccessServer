@@ -45,7 +45,7 @@ public sealed class AuthServerOptions {
    public const string AuthorizationEndpointPath = ConnectPrefix + "/authorize";
    public const string TokenEndpointPath = ConnectPrefix + "/token";
    public const string UserInfoEndpointPath = ConnectPrefix + "/userinfo";
-   public const string LogoutEndpointPath = ConnectPrefix + "/logout";
+   public const string LogoutEndpointPath = ConnectPrefix + "/endsession";
 
    // APIs (Resources + Scopes)
    // ------------------------------------------------------------------
@@ -73,28 +73,38 @@ public sealed class AuthServerOptions {
    public Uri UserInfoEndpointUri => new(Issuer, UserInfoEndpointPath);
    public Uri LogoutEndpointUri => new(Issuer, LogoutEndpointPath);
    
-   public Uri BlazorWasmRedirectUri() =>
-      CombineBaseAndPath(BlazorWasm.BaseUrl, BlazorWasm.RedirectPath);
-   public Uri BlazorWasmPostLogoutRedirectUri() =>
-      CombineBaseAndPath(BlazorWasm.BaseUrl, BlazorWasm.PostLogoutRedirectPath);
    
-   public Uri WebMvcRedirectUri() =>
-      CombineBaseAndPath(WebMvc.BaseUrl, WebMvc.RedirectPath);
-   public Uri WebMvcPostLogoutRedirectUri() =>
-      CombineBaseAndPath(WebMvc.BaseUrl, WebMvc.PostLogoutRedirectPath);
+   // WASM (Public client)
+   public Uri BlazorWasmSignInCallbackUri() =>
+      CombineBaseAndPath(BlazorWasm.BaseUrl, BlazorWasm.SignInCallbackPath);
 
-   public Uri WebBlazorSsrRedirectUri() =>
-      CombineBaseAndPath(WebBlazorSsr.BaseUrl, WebBlazorSsr.RedirectPath);
-   public Uri WebBlazorSsrPostLogoutRedirectUri() =>
-      CombineBaseAndPath(WebBlazorSsr.BaseUrl, WebBlazorSsr.PostLogoutRedirectPath);
+   public Uri BlazorWasmSignOutCallbackUri() =>
+      CombineBaseAndPath(BlazorWasm.BaseUrl, BlazorWasm.SignOutCallbackPath);
 
+   // MVC (Confidential client)
+   public Uri WebMvcSignInCallbackUri() =>
+      CombineBaseAndPath(WebMvc.BaseUrl, WebMvc.SignInCallbackPath);
+
+   public Uri WebMvcSignOutCallbackUri() =>
+      CombineBaseAndPath(WebMvc.BaseUrl, WebMvc.SignOutCallbackPath);
+
+   // Blazor SSR (Confidential client)
+   public Uri WebBlazorSsrSignInCallbackUri() =>
+      CombineBaseAndPath(WebBlazorSsr.BaseUrl, WebBlazorSsr.SignInCallbackPath);
+
+   public Uri WebBlazorSsrSignOutCallbackUri() =>
+      CombineBaseAndPath(WebBlazorSsr.BaseUrl, WebBlazorSsr.SignOutCallbackPath);
+
+   // Android bleibt wie gehabt (weil dort die Strings schon semantisch klar sind)
    public Uri AndroidCustomSchemeRedirectUri() =>
-      new (Android.CustomSchemeRedirectUriString, UriKind.Absolute);
+      new(Android.CustomSchemeRedirectUriString, UriKind.Absolute);
+
    public Uri AndroidLoopbackRedirectUri() =>
-      new (Android.LoopbackRedirectUriString, UriKind.Absolute);
-   
-   public Uri AndroidPostLogoutRedirectUri()
-      => new(Android.PostLogoutRedirectUriString, UriKind.Absolute);
+      new(Android.LoopbackRedirectUriString, UriKind.Absolute);
+
+   public Uri AndroidPostLogoutRedirectUri() =>
+      new(Android.PostLogoutRedirectUriString, UriKind.Absolute);
+
    
    // ------------------------------------------------------------------
    // Helpers

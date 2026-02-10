@@ -20,19 +20,28 @@ public sealed class SeedUsersHostedService : IHostedService {
    public async Task StartAsync(CancellationToken ct) {
       using var scope = _sp.CreateScope();
       var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
+      
       // ----------------------------
       // Customer demo user
+      // ----------------------------
+      // await EnsureUserAsync(
+      //    users,
+      //    id: Guid.Parse("00000000-0000-0000-0001-000000000002"),
+      //    email: "customer@mail.local",
+      //    password: "Geh1m_",
+      //    adminRights: AdminRights.None
+      // );
+      
+      // ----------------------------
+      // Owner demo user (starts as Pending)
       // ----------------------------
       await EnsureUserAsync(
          users,
          id: Guid.Parse("00000000-0000-0000-0001-000000000001"),
-         email: "customer@mail.local",
+         email: "owner@mail.local",
          password: "Geh1m_",
-         accountType: "customer"
-         // adminRights: AdminRights.None,
-         // CreatedAt = DateTime.UtcNow,
-         // UpdatedAt = DateTime.UtcNow,
+         accountType: "owner",
+         adminRights: AdminRights.None
       );
 
       // ----------------------------
@@ -45,9 +54,7 @@ public sealed class SeedUsersHostedService : IHostedService {
          email: "admin@mail.local",
          password: "Geh1m_",
          accountType: "employee",
-         adminRights: ManageCars | ManageBookings | ManageCustomers | ManageEmployees
-         // CreatedAt = DateTime.UtcNow,
-         // UpdatedAt = DateTime.UtcNow,
+         adminRights: (AdminRights) 511
       );
    }
 
@@ -56,7 +63,7 @@ public sealed class SeedUsersHostedService : IHostedService {
       Guid id,
       string email,
       string password,
-      string accountType,
+      string accountType = "customer",
       AdminRights adminRights = AdminRights.None
    ) {
       var existing = await users.FindByEmailAsync(email);
@@ -68,9 +75,10 @@ public sealed class SeedUsersHostedService : IHostedService {
          Email = email,
          EmailConfirmed = true,
          AccountType = accountType,
-         AdminRights = adminRights
-         // CreatedAt = DateTime.UtcNow
-         // UpdatedAt = DateTime.UtcNow
+         AdminRights = adminRights,
+         
+         CreatedAt = DateTime.UtcNow,
+         UpdatedAt = DateTime.UtcNow
       };
 
       var result = await users.CreateAsync(user, password);

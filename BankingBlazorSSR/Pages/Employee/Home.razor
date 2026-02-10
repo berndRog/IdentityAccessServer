@@ -1,0 +1,5 @@
+@page "/employee"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "EmployeesOnly")]
+
+<h1>Employee Dashboard</h1>

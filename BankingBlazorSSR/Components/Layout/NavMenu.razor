@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+﻿﻿@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Nav
 
 <div class="top-row ps-3 navbar navbar-dark">
@@ -19,7 +19,7 @@
     </div>
 
     <div class="nav-item px-3">
-      <NavLink class="nav-link" href="profile">
+      <NavLink class="nav-link" href="owner/profile">
         <span class="bi bi-person-circle" aria-hidden="true"></span>
         Profil
       </NavLink>
@@ -44,12 +44,12 @@
   private bool collapseNavMenu = true;
   private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-  // Owner-Login (wenn du Owner/Employee trennst)
+  // Login mit ReturnUrl (kein /owner mehr - wird über Roles gesteuert)
   private string LoginUrl =>
-    "/login/owner?returnUrl=" + Uri.EscapeDataString(Nav.ToBaseRelativePath(Nav.Uri).Insert(0, "/"));
+    "/identity/login?returnUrl=" + Uri.EscapeDataString(Nav.ToBaseRelativePath(Nav.Uri).Insert(0, "/"));
 
   // serverseitiger Logout (Cookie + OIDC)
-  private string LogoutUrl => "/logout";
+  private string LogoutUrl => "/identity/logout";
 
   private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
 }

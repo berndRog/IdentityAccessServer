@@ -124,9 +124,9 @@ public sealed class SeedHostedService(
          DisplayName = "Blazor WASM",
          ClientType = ClientTypes.Public,
 
-         RedirectUris = { options.BlazorWasmRedirectUri() },
-         PostLogoutRedirectUris = { options.BlazorWasmPostLogoutRedirectUri() },
-
+         RedirectUris = { options.BlazorWasmSignInCallbackUri() },
+         PostLogoutRedirectUris = { options.BlazorWasmSignOutCallbackUri() },
+         
          Permissions = {
             Permissions.Endpoints.Authorization,
             Permissions.Endpoints.Token,
@@ -158,9 +158,9 @@ public sealed class SeedHostedService(
          DisplayName = "WebClient MVC",
          ClientType = ClientTypes.Confidential,
 
-         RedirectUris = { options.WebMvcRedirectUri() },
-         PostLogoutRedirectUris = { options.WebMvcPostLogoutRedirectUri() },
-
+         RedirectUris = { options.WebMvcSignInCallbackUri() },
+         PostLogoutRedirectUris = { options.WebMvcSignOutCallbackUri() },
+         
          Permissions = {
             Permissions.Endpoints.Authorization,
             Permissions.Endpoints.Token,
@@ -188,8 +188,8 @@ public sealed class SeedHostedService(
          DisplayName = "WebClient Blazor SSR",
          ClientType = ClientTypes.Confidential,
 
-         RedirectUris = { options.WebBlazorSsrRedirectUri() },
-         PostLogoutRedirectUris = { options.WebBlazorSsrPostLogoutRedirectUri() },
+         RedirectUris = { options.WebBlazorSsrSignInCallbackUri() },
+         PostLogoutRedirectUris = { options.WebBlazorSsrSignOutCallbackUri() },
 
          Permissions = {
             Permissions.Endpoints.Authorization,

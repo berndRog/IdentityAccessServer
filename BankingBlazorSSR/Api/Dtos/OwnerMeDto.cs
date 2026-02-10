@@ -1,4 +1,4 @@
-namespace BankingBlazorSSR.Hosting.Dtos;
+namespace BankingBlazorSSR.Api.Dtos;
 
 public sealed record OwnerMeDto(
    Guid Id,

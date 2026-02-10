@@ -8,7 +8,7 @@ namespace OidcOauthServer.Auth.Claims;
 /// - Profile-related claims
 /// - Domain-specific authorization and lifecycle claims
 ///
-/// Clients (MVC, Blazor WASM, Android, APIs) must rely on these constants.
+/// Clients (MVC, Blazor WASM, BlazorSSR, Android, APIs) must rely on these constants.
 /// </summary>
 public static class AuthClaims {
    //--- Standard OIDC / JWT claims -------------------------------------------
@@ -30,10 +30,16 @@ public static class AuthClaims {
    /// </summary>
    public const string PreferredUsername = "preferred_username";
 
+   /// <summary>
+   /// Role claim used by ASP.NET authorization.
+   /// Values: "Customer" | "Owner" | "Employee"
+   /// </summary>
+   public const string Role = "role"; 
+   
    //--- Domain-specific claims -------------------------------------------
    /// <summary>
-   /// Account classification.
-   /// Values: "customer" | "employee"
+   /// Account classification (domain specific).
+   /// Values: "customer" | "owner" | "employee"
    /// </summary>
    public const string AccountType = "account_type";
 

@@ -25,6 +25,10 @@ public static class ClaimDestinations {
             ? new[] { Destinations.IdentityToken, Destinations.AccessToken }
             : Array.Empty<string>();
       
+      // role -> UI-Navigation / AccessToken (für APIs).
+      if (claim.Type == AuthClaims.Role)
+         return new[] { Destinations.AccessToken, Destinations.IdentityToken };
+      
       // Lifecycle / housekeeping (debuggable in id_token, usable in API)
       if (claim.Type is AuthClaims.CreatedAt or AuthClaims.UpdatedAt) 
          return new[] { Destinations.AccessToken, Destinations.IdentityToken };
