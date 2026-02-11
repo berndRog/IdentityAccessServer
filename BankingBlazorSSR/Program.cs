@@ -172,15 +172,15 @@ public sealed class Program {
             options.SignedOutRedirectUri = "/";   // 
 
             
-            Console.WriteLine($"CallbackPath={options.CallbackPath}, SignedOutCallbackPath={options.SignedOutCallbackPath}");
-
-            options.Events ??= new OpenIdConnectEvents();
-            options.Events.OnSignedOutCallbackRedirect = context => {
-               // Final UX destination after the technical callback
-               context.Response.Redirect("/");
-               context.HandleResponse();
-               return Task.CompletedTask;
-            };
+            // Console.WriteLine($"CallbackPath={options.CallbackPath}, SignedOutCallbackPath={options.SignedOutCallbackPath}");
+            //
+            // options.Events ??= new OpenIdConnectEvents();
+            // options.Events.OnSignedOutCallbackRedirect = context => {
+            //    // Final UX destination after the technical callback
+            //    context.Response.Redirect("/");
+            //    context.HandleResponse();
+            //    return Task.CompletedTask;
+            // };
 
             
             // Keep tokens in the auth session (cookie ticket)

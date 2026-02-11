@@ -6,117 +6,78 @@ using Microsoft.AspNetCore.Mvc;
 namespace BankingBlazorSSR.Controllers;
 
 /// <summary>
-/// Handles the authentication flow for the Blazor SSR client.
-/// Provides endpoints that delegate to the OIDC middleware.
-/// - identity/login → initiates OIDC login (Challenge)
-/// - identity/logout → initiates OIDC logout (SignOut)
-/// - identity/signed-out → technical callback after OIDC logout
-///   redirects to final UX page ("/") after logout completes.
+/// Handles authentication for the Blazor SSR client by delegating to ASP.NET Core authentication middleware.
+/// Routes:
+/// - GET /identity/login  -> starts OIDC login (Challenge)
+/// - GET /identity/logout -> starts OIDC logout (SignOut)
+///
+/// Note:
+/// - The OIDC middleware uses configured callback paths (CallbackPath / SignedOutCallbackPath).
+/// - We do not implement a separate "signed-out" action here.
+///   The final redirect after logout is controlled by AuthenticationProperties.RedirectUri
+///   and/or OpenIdConnectOptions.SignedOutRedirectUri.
 /// </summary>
 [Route("identity")]
 public class IdentityController(
    ILogger<IdentityController> logger
 ) : Controller {
+
    /// <summary>
-   /// Initiates the OIDC login flow.
+   /// Starts the OIDC login flow.
    ///
-   /// - If the user is already authenticated, redirect to the (safe) returnUrl.
-   /// - Otherwise, challenge the OIDC middleware (redirects to the authorization server).
+   /// Behavior:
+   /// - If already authenticated: redirects to a safe local returnUrl (or "/").
+   /// - If not authenticated: returns a ChallengeResult that triggers the OIDC middleware.
+   ///   After successful login, the middleware redirects the browser to props.RedirectUri.
    /// </summary>
-   /// <param name="returnUrl">Optional local URL to redirect to after successful login.</param>
+   /// <param name="returnUrl">Optional local URL within this app (must be local).</param>
    [HttpGet("login")]
    public IActionResult Login(string? returnUrl = null) {
       logger.LogInformation("Login requested. ReturnUrl: {ReturnUrl}", returnUrl ?? "(none)");
 
-      // If the user is already authenticated, we can redirect immediately.
       if (User.Identity?.IsAuthenticated == true) {
          logger.LogInformation("User already authenticated: {User}", User.Identity.Name);
 
-         // Prevent open redirect vulnerabilities: only allow local return URLs.
          var targetUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
-         if (Url.IsLocalUrl(targetUrl))
-            return LocalRedirect(targetUrl);
-
-         return LocalRedirect("/");
+         return Url.IsLocalUrl(targetUrl)
+            ? LocalRedirect(targetUrl)
+            : LocalRedirect("/");
       }
 
-      // AuthenticationProperties.RedirectUri is where the client app continues AFTER the OIDC login succeeds.
-      // This must be a local URL in the client application.
       var target = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
-
-      // Ensure we don't accept external URLs (defense in depth).
       if (!Url.IsLocalUrl(target))
          target = "/";
 
       var props = new AuthenticationProperties {
          RedirectUri = target,
-         IsPersistent = false // session cookie (not persistent)
+         IsPersistent = false
       };
 
-      logger.LogInformation(
-         "Challenging with OpenIdConnect. RedirectUri: {RedirectUri}",
-         props.RedirectUri
-      );
+      logger.LogInformation("Challenging OIDC. RedirectUri: {RedirectUri}", props.RedirectUri);
 
-      // Triggers OIDC challenge (redirect to authorization server).
       return Challenge(props, OpenIdConnectDefaults.AuthenticationScheme);
    }
 
    /// <summary>
-   /// Initiates the OIDC logout flow.
+   /// Starts the OIDC logout flow (RP-initiated logout).
    ///
-   /// Important:
-   /// - The OIDC logout uses a TECHNICAL callback endpoint (RedirectUri) where the middleware
-   ///   finishes the protocol flow.
-   /// - The final UX destination ("/") is handled by SignedOut().
+   /// This action does not perform the logout itself. It returns a SignOutResult.
+   /// The authentication middleware then:
+   /// - clears the local cookie session (Cookie scheme)
+   /// - calls the OIDC end-session endpoint (OpenIdConnect scheme)
+   /// - receives the technical signed-out callback on SignedOutCallbackPath
+   /// - finally redirects the browser to props.RedirectUri (final UX destination)
    /// </summary>
-   /// <returns>Empty result (OIDC middleware performs the redirect to the auth server).</returns>
-   // [HttpGet("logout")]
-   // public async Task<IActionResult> Logout() {
-   //    logger.LogInformation("Logout requested for user: {User}", User.Identity?.Name ?? "(anonymous)");
-   //
-   //    // After the OIDC middleware completed the sign-out callback,
-   //    // it will redirect the browser to this final UX destination.
-   //    var props = new AuthenticationProperties {
-   //       RedirectUri = "/"
-   //    };
-   //
-   //    // Step 1: end local session (remove the authentication cookie for this client app)
-   //    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-   //
-   //    // Step 2: trigger OIDC end-session (redirect to authorization server)
-   //    await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme, props);
-   //    
-   //    
-   //    // The OIDC middleware will handle the redirect to the authorization server.
-   //    return new EmptyResult();
-   //    
-   // }
-   
    [HttpGet("logout")]
-   public IActionResult Logout()
-   {
+   public IActionResult Logout() {
+      logger.LogInformation("Logout requested for user: {User}", User.Identity?.Name ?? "(anonymous)");
+
       return SignOut(
          new AuthenticationProperties { RedirectUri = "/" },
          OpenIdConnectDefaults.AuthenticationScheme,
          CookieAuthenticationDefaults.AuthenticationScheme
       );
    }
-
-
-   // /// <summary>
-   // /// Technical callback endpoint after OIDC logout.
-   // ///
-   // /// This endpoint should not render UI.
-   // /// It only redirects to the final UX destination inside the client app.
-   // /// </summary>
-   // [HttpGet("signed-out")]
-   // public IActionResult SignedOut() {
-   //    logger.LogInformation("Signed-out callback reached. Redirecting to '/'.");
-   //
-   //    // Final user-facing destination after logout:
-   //    return LocalRedirect("/");
-   // }
 }
 
 /*
@@ -124,95 +85,68 @@ public class IdentityController(
 DIDAKTIK & LERNZIELE (DE)
 ===============================================================================
 
-0) Warum gibt es einen "Signed-Out Callback"?
----------------------------------------------
-OIDC trennt strikt zwischen:
-- TECHNISCHEN Callback-Endpunkten (für Middleware/Protokoll)
-- und UX-Zielseiten (für Menschen)
+0) Was zeigt dieser Controller wirklich?
+----------------------------------------
+Er implementiert NICHT den OIDC-Flow selbst, sondern nutzt ActionResults,
+die die ASP.NET Core Authentication Middleware ausführt:
 
-Bei Logout ist RedirectUri NICHT die Zielseite, sondern der Rückkanal,
-über den die OIDC-Middleware den Logout abschließt.
+- Challenge(...) -> Middleware startet Login-Flow
+- SignOut(...)   -> Middleware startet Logout-Flow
 
 Merksatz:
-   "Callback ist Technik – Redirect ist UX."
+   Controller triggert nur, Middleware erledigt das Protokoll.
 
 -------------------------------------------------------------------------------
 
-1) Controller statt Minimal API für Auth-Flows
-----------------------------------------------
-Vorteile eines Controllers:
-- klare Bündelung der Auth-Routen (/identity/*)
-- gute Testbarkeit (Controller-Unit-Tests)
-- weniger Routing-Konflikte mit Blazor
-- didaktisch: "Auth ist kritisch → explizit implementieren"
-
--------------------------------------------------------------------------------
-
-2) Login-Flow (Challenge) richtig lesen
+1) Login: Challenge + sichere returnUrl
 ---------------------------------------
-Challenge() bedeutet:
-- User ist nicht authentifiziert
-- Redirect zum Authorization Server (/connect/authorize)
-- nach erfolgreichem Login: Redirect zurück zur RedirectUri im Client
+- Wenn der User nicht eingeloggt ist: Challenge() leitet zum AuthServer um.
+- Nach erfolgreichem Login kommt der Browser zur CallbackPath zurück
+  (z.B. /signin-oidc) und geht dann zur RedirectUri (returnUrl im Client).
+
+Sicherheit:
+- returnUrl muss lokal sein (Url.IsLocalUrl), sonst Open Redirect Risiko.
+
+-------------------------------------------------------------------------------
+
+2) Logout: SignOutResult statt SignOutAsync
+-------------------------------------------
+Wir verwenden den Standard-Weg:
+   return SignOut(...)
+
+Warum?
+- kein eigenes await / keine manuelle Reihenfolge im Controller
+- Middleware macht Cookie-Clearing und OIDC EndSession korrekt
 
 Wichtig:
-- returnUrl IM Client muss lokal sein (Url.IsLocalUrl)
-- sonst drohen Open Redirects
+- SignedOutCallbackPath (z.B. /signout-callback-oidc) ist ein technischer Endpunkt,
+  nicht die "Startseite nach Logout".
+
+Der finale Zielort ist:
+- AuthenticationProperties.RedirectUri (hier "/")
+  und optional zusätzlich OpenIdConnectOptions.SignedOutRedirectUri.
 
 -------------------------------------------------------------------------------
 
-3) Logout-Flow: drei Stationen (statt "nur Cookie löschen")
+3) Begriffsklärung (die in der Praxis oft verwechselt wird)
 -----------------------------------------------------------
-A) Lokale Client-Session beenden:
-   - CookieAuthenticationDefaults (Client-App Cookie)
-
-B) Zentrale SSO-Session beenden:
-   - OpenIdConnectDefaults (EndSession beim AuthServer)
-
-C) Technischer Rückkanal im Client:
-   - /identity/signed-out
-   - hier erst finaler Redirect auf "/" (oder Login)
-
-Warum C)?
-Weil sonst der Browser nach Logout auf einer technischen Callback-URL stehen bleibt
-(z.B. /signout-callback-oidc), die für den User nicht als "Startseite" gedacht ist.
-
--------------------------------------------------------------------------------
-
-4) Begriffsklärung: RedirectUri vs SignedOutCallbackPath vs PostLogoutRedirectUri
---------------------------------------------------------------------------------
-- RedirectUri (Client, Login): Ziel im Client nach erfolgreichem Login.
-- SignedOutCallbackPath (Client, Logout): technische Callback-Route im Client.
-- PostLogoutRedirectUri (AuthServer, Client-Registrierung): wohin der AuthServer
-  nach Logout zurückleiten DARF (Whitelist).
+- CallbackPath (Client): technische Rückkehr nach Login (z.B. /signin-oidc)
+- SignedOutCallbackPath (Client): technische Rückkehr nach Logout (z.B. /signout-callback-oidc)
+- RedirectUri (Login/Logout Properties): finale UX-Weiterleitung im Client nach Abschluss
+- PostLogoutRedirectUri (AuthServer Registrierung): Whitelist, wohin der AuthServer zurückleiten darf
 
 Merksatz:
-   "PostLogoutRedirectUri wird im AuthServer registriert, SignedOutCallbackPath ist im Client."
+   CallbackPaths sind Technik, RedirectUri ist UX.
 
 -------------------------------------------------------------------------------
 
-5) Lernziele für Studierende
-----------------------------
+4) Lernziele
+------------
 Studierende sollen verstehen:
-- OIDC ist ein Protokollfluss (nicht nur UI)
-- Logout ist sicherheitskritisch (SSO + Redirects)
-- Callback-Endpunkte sind technische Bausteine
-- Open Redirect Prevention (Url.IsLocalUrl) ist Pflicht
-- Trennung von Verantwortung: Middleware (Protokoll) vs App (Navigation/UX)
-
--------------------------------------------------------------------------------
-
-6) Übungs-/Testideen
---------------------
-A) Open Redirect Test:
-   /identity/login?returnUrl=https://evil.com
-   → darf NICHT extern redirecten
-
-B) Logout ohne OIDC SignOut:
-   Schritt 2 auskommentieren → SSO bleibt aktiv → sofort wieder eingeloggt
-
-C) Callback verstehen:
-   SignedOut() loggt und redirectet auf "/" → UX sauber
+- OIDC ist ein Protokollfluss, den Middleware abwickelt
+- Controller liefert Trigger (Challenge/SignOut), nicht "Business-Logout"
+- Logout ist SSO-relevant: Cookie löschen reicht nicht
+- Open Redirect Prevention ist Pflicht (Url.IsLocalUrl)
 
 ===============================================================================
 */
