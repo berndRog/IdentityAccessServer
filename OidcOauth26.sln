@@ -5,7 +5,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		compose.yaml = compose.yaml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OidcOauthServer", "OidcOauthServer\OidcOauthServer.csproj", "{E0F5636A-4D67-4C37-B01C-FF072A74F439}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityAccessServer", "IdentityAccessServer\IdentityAccessServer.csproj", "{E0F5636A-4D67-4C37-B01C-FF072A74F439}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebClientMvc", "WebClientMvc\WebClientMvc.csproj", "{D80A3D51-B02C-40B1-ADE0-C2D11AED9161}"
 EndProject
