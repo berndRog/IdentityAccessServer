@@ -1,0 +1,51 @@
+@using BankingBlazorSsr.Core.Dto
+<div class="container-fluid mt-3">
+  <div class="card shadow-sm w-100">  <!-- full width -->
+
+    <div class="card-body">
+      <h5 class="card-title">Kontoinhaber</h5>
+
+      @if (Owners?.Any() == true) {
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-striped table-hover">
+            <thead class="align-middle">
+            <tr>
+              <th class="fw-normal">Vorname</th>
+              <th class="fw-normal">Nachname</th>
+              <th class="fw-normal">Email</th>
+              <th class="fw-normal">UserName</th>
+              <th class="fw-normal">Id</th>
+              <th class="fw-normal">UserId</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var owner in Owners) {
+              <tr class="align-middle p-0">
+                <td>@owner.Firstname</td>
+                <td>@owner.Lastname</td>
+                <td>@owner.Email</td>
+                <td>@owner.UserName</td>
+                <td>@owner.Id</td>
+                <td>@owner.UserId</td>
+                <td>
+                  <button class="btn btn-primary btn-sm" @onclick="() => OnOpenOwner.InvokeAsync(owner.Id)">
+                    Kontoinhaber öffnen
+                  </button>
+                </td>
+              </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+      }
+      else {
+        <p>Keine Konten verfügbar.</p>
+      }
+    </div>
+  </div>
+</div>
+
+@code {
+  [Parameter] public List<OwnerDto>? Owners { get; set; }
+  [Parameter] public EventCallback<Guid> OnOpenOwner { get; set; }
+}

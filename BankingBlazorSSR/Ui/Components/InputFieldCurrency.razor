@@ -1,0 +1,139 @@
+@using System.Globalization
+
+@typeparam TValue where TValue : struct 
+
+<div class="form-group row">
+  <label for="@Id" class="col-3 col-form-label">@Label</label>
+  <div class="col-9">
+    <input type="text" class="form-control @(HasError ? "is-invalid" : "")"
+           id="@Id"
+           placeholder="@Placeholder"
+           value="@RawInputValue"
+           @oninput="OnValueChanged"
+           @onblur="FormatValue"/>
+
+    @if (HasError) {
+      <div class="invalid-feedback">@ErrorMessage</div>
+    }
+  </div>
+</div>
+
+@code {
+  [Parameter] public string Id { get; set; } = string.Empty;
+  [Parameter] public string Label { get; set; } = string.Empty;
+  [Parameter] public string Placeholder { get; set; } = string.Empty;
+  [Parameter] public TValue Value { get; set; } = default!; // ✅ Stellt sicher, dass TValue initialisiert ist
+  [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+
+  private string RawInputValue { get; set; } = string.Empty;
+  private bool HasError { get; set; } = false;
+  private string ErrorMessage { get; set; } = string.Empty;
+  private CultureInfo culture = new CultureInfo("de-DE");
+
+  protected override void OnParametersSet() {
+    RawInputValue = Value.ToString() ?? string.Empty;
+  }
+
+  private async Task OnValueChanged(ChangeEventArgs e) {
+    string input = e.Value?.ToString() ?? string.Empty;
+    RawInputValue = input; // Speichert die unformatierte Benutzereingabe
+    HasError = false;
+
+    if (TryParseValue(input, out TValue parsedValue)) {
+      Value = parsedValue;
+      await ValueChanged.InvokeAsync(Value);
+    }
+    else {
+      HasError = true;
+      ErrorMessage = "Ungültige Zahl. Bitte geben Sie eine gültige Dezimalzahl ein.";
+    }
+  }
+
+  private void FormatValue(FocusEventArgs e) {
+    if (!HasError) {
+      RawInputValue = FormatValueForDisplay(Value);
+    }
+  }
+
+  private string FormatValueForDisplay(TValue value) {
+    return value switch {
+      double d => d.ToString("C", culture),  // Währungsformatierung
+      decimal dec => dec.ToString("C", culture),
+      _ => value.ToString() ?? string.Empty
+    };
+  }
+
+  private bool TryParseValue(string? input, out TValue result) {
+    if (typeof(TValue) == typeof(double) && double.TryParse(input, NumberStyles.Number, culture, out var doubleValue)) {
+      result = (TValue)(object)doubleValue;
+      return true;
+    }
+    if (typeof(TValue) == typeof(decimal) && decimal.TryParse(input, NumberStyles.Number, culture, out var decimalValue)) {
+      result = (TValue)(object)decimalValue;
+      return true;
+    }
+
+    result = default!;
+    return false;
+  }
+}
+
+
+
+
+
+@* @typeparam TValue  *@
+@* *@
+@* <div class="form-group row"> *@
+@*     <label for="@Id" class="col-3 col-form-label">@Label</label> *@
+@*     <div class="col-9"> *@
+@*         <input type="text" class="form-control a@(HasError ? "is-invalid" : "")" *@
+@*                id="@Id" *@
+@*                placeholder="@Placeholder" *@
+@*                @bind="RawInputValue" *@
+@*                @oninput="OnValueChanged" *@
+@*                @onblur="FormatValue"/> *@
+@* *@
+@*         @if (HasError) { *@
+@*             <div class="invalid-feedback">@ErrorMessage</div> *@
+@*         } *@
+@*     </div> *@
+@* </div> *@
+@* *@
+@* @code { *@
+@*     [Parameter] public string Id { get; set; } = string.Empty; *@
+@*     [Parameter] public string Label { get; set; } = string.Empty; *@
+@*     [Parameter] public string Placeholder { get; set; } = string.Empty; *@
+@*     [Parameter] public TValue Value { get; set; } = default!; *@
+@*     [Parameter] public EventCallback<TValue> ValueChanged { get; set; } *@
+@* *@
+@*     private string RawInputValue { get; set; } = string.Empty; // Unformatierte Benutzereingabe *@
+@*     private bool HasError { get; set; } = false; *@
+@*     private string ErrorMessage { get; set; } = string.Empty; *@
+@*     private CultureInfo culture = new CultureInfo("de-DE"); *@
+@* *@
+@*     protected override void OnParametersSet() { *@
+@*         // Zeigt den formatierten Wert erst bei OnParametersSet an (z. B. wenn der Wert extern gesetzt wird) *@
+@*         RawInputValue = Value != null ? Value.ToString() : string.Empty; *@
+@*     } *@
+@* *@
+@*     private async Task OnValueChanged(ChangeEventArgs e) { *@
+@*         string input = e.Value?.ToString() ?? string.Empty; *@
+@*         RawInputValue = input; // Speichert die rohe Eingabe *@
+@*         HasError = false; // Setzt Fehlerzustand zurück *@
+@* *@
+@*         if (double.TryParse(input, NumberStyles.Number, culture, out var result)) { *@
+@*             Value = (TValue)(object)result; *@
+@*             await ValueChanged.InvokeAsync(Value); *@
+@*         } *@
+@*         else { *@
+@*             HasError = true; *@
+@*             ErrorMessage = "Ungültige Zahl. Bitte geben Sie eine gültige Dezimalzahl ein."; *@
+@*         } *@
+@*     } *@
+@*     private void FormatValue() { *@
+@*         if (!HasError && Value is double d) { *@
+@*             RawInputValue = d.ToString("C", culture); *@
+@*         } *@
+@*     } *@
+@* } *@

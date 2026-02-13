@@ -1,0 +1,37 @@
+@using System.Globalization
+@using BankingBlazorSsr.Core.Dto
+<div class="card shadow-sm w-100">
+  <div class="card-body">
+    <h6 class="card-title">Konten</h6>
+
+    @if (Accounts?.Any() == true) {
+      <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+        <table class="table table-sm table-striped table-hover">
+          <thead>
+          <tr>
+            <th class="fw-normal">Kontonummer</th>
+            <th class="fw-normal">Kontostand</th>
+            <th class="fw-normal">Aktionen</th>
+          </tr>
+          </thead>
+          <tbody>
+          @foreach (var account in Accounts) {
+            <tr>
+              <td>@account.Iban</td>
+              <td>@account.Balance.ToString("C", CultureInfo.CurrentCulture)</td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    }
+    else {
+      <p>Keine Konten verfügbar.</p>
+    }
+  </div>
+</div>
+
+@code {
+  [Parameter] public List<AccountDto>? Accounts { get; set; }
+  [Parameter] public EventCallback<Guid> OnOpenAccount { get; set; }
+}

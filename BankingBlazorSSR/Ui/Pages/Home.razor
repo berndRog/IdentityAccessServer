@@ -1,0 +1,52 @@
+@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [AllowAnonymous]
+
+<PageTitle>Banking Client</PageTitle>
+
+<div class="container py-4" style="max-width: 860px;">
+  <h1 class="h3 mb-3">Banking</h1>
+
+  <AuthorizeView Context="auth">
+    <NotAuthorized>
+      <p class="text-muted">
+        Du bist nicht angemeldet. Bitte oben im Menü auf <b>Anmelden</b> klicken.
+      </p>
+    </NotAuthorized>
+
+    <Authorized>
+      @{
+        var user = auth.User;
+        var isOwner = user.IsInRole("Owner");
+        var isEmployee = user.IsInRole("Employee");
+        var displayName =
+          user.FindFirst("preferred_username")?.Value
+          ?? user.Identity?.Name
+          ?? "(unknown)";
+      }
+
+      <p class="text-muted">Angemeldet als <b>@displayName</b></p>
+
+      <div class="d-flex gap-2 flex-wrap">
+        @if (isOwner)
+        {
+          <a class="btn btn-primary" href="/owner">Owner Bereich</a>
+          <a class="btn btn-outline-secondary" href="/owner/profile">Profil</a>
+        }
+
+        @if (isEmployee)
+        {
+          <a class="btn btn-primary" href="/employee">Employee Bereich</a>
+        }
+      </div>
+
+      @if (!isOwner && !isEmployee)
+      {
+        <div class="alert alert-warning mt-3">
+          Keine passende Rolle gefunden.
+        </div>
+      }
+    </Authorized>
+  </AuthorizeView>
+</div>

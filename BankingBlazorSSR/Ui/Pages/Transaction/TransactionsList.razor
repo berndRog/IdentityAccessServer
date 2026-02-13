@@ -1,0 +1,25 @@
+@* @page "/accounts/{accountId:guid}/transactions/create" *@
+@* *@
+@* *@
+@* <div class="container mt-3"> *@
+@*   @if (!string.IsNullOrEmpty(_errorMessage)) { *@
+@*     <div class="alert alert-danger">@_errorMessage</div> *@
+@*   } *@
+@* *@
+@*   <div class="col-12 mb-3 me-md-3"> *@
+@*     <OwnerAccountCard FirstName="@_ownerDto?.Firstname" LastName="@_ownerDto?.Lastname" Iban="@_accountDto?.Iban"/> *@
+@*   </div> *@
+@* *@
+@*   <div class="card shadow-sm w-100"> *@
+@*     <div class="card-body"> *@
+@*       <h5 class="card-title">Kontoauszug</h5> *@
+@*       <div class="col-12 mb-3 me-md-3"> *@
+@*         <TransactionStartEnd StartEndModel="_transactionStartEndModel" OnSubmit="HandleStartEndDate"/> *@
+@*       </div> *@
+@*      *@
+@*       <div class="col-12 mb-3"> *@
+@*         <TransactionsTable TransactionListItems="@_transactionListItemDtos" /> *@
+@*       </div> *@
+@*     </div> *@
+@*   </div> *@
+@* </div>   *@

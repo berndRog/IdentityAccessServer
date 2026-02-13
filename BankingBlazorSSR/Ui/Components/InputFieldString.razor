@@ -1,0 +1,35 @@
+@using System.Diagnostics.CodeAnalysis
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+
+@inherits InputBase<string>
+
+<div class="form-group row">
+  <label for="@Id" class="col-3 col-form-label">@Label</label>
+  <div class="col-9">
+    <input type="@Type" class="form-control" id="@Id" placeholder="@Placeholder" 
+           value="@CurrentValueAsString" 
+           @oninput="OnInput" />
+  </div>
+</div>
+
+@code {
+  [Parameter] public string Id { get; set; } = string.Empty;
+  [Parameter] public string Label { get; set; } = string.Empty;
+  [Parameter] public string Placeholder { get; set; } = string.Empty;
+  [Parameter] public string Type { get; set; } = "text";
+
+  protected override bool TryParseValueFromString(
+    string? value, 
+    out string result, 
+    [NotNullWhen(false)] out string? validationErrorMessage
+  ) {
+    result = value ?? string.Empty;
+    validationErrorMessage = null;
+    return true;
+  }
+  
+  private void OnInput(ChangeEventArgs e) {
+    CurrentValueAsString = e.Value?.ToString() ?? string.Empty;
+  }
+}

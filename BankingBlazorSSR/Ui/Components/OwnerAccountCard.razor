@@ -1,0 +1,23 @@
+@using BankingBlazorSsr.Core.Dto
+
+<div class="card shadow-sm w-100">
+  <div class="card-body">
+    <h5 class="card-title">Kontoinhaber</h5>
+    <div class="d-flex flex-column flex-md-row gap-2">
+      <div>
+        <label class="fw-normal">Name:</label>
+        <span class="ms-2">@FirstName @LastName</span>
+      </div>
+      <div>
+        <label class="fw-normal">IBAN:</label>
+        <span class="ms-2">@Iban</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+@code {
+  [Parameter] public required string FirstName { get; set; }
+  [Parameter] public required string LastName { get; set; }
+  [Parameter] public required string Iban { get; set; }
+}

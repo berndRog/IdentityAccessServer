@@ -1,0 +1,68 @@
+@*
+@page "/accounts/{accountId:guid}/beneficiaries/{beneficiaryId:guid}/transfers/create"
+
+<div class="container mt-3">
+  @if (!string.IsNullOrEmpty(_errorMessage)) {
+    <div class="alert alert-danger">@_errorMessage</div>
+  }
+
+  @if (!string.IsNullOrEmpty(_warnMessage)) {
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+      @_warnMessage
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  }
+  
+  <div class="card">
+    <div class="card-header">
+      <h5>Überweisungsformular</h5>
+    </div>
+    <div class="card-body overflow-auto">
+      <table class="table table-sm table-responsive">
+        <thead class="align-middle">
+        <tr>
+          <th class="fw-normal d-none d-sm-table-cell"></th>
+          <th class="fw-normal">Vorname</th>
+          <th class="fw-normal">Nachname</th>
+          <th class="fw-normal">IBAN</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="align-middle">
+          <td class="d-none d-sm-table-cell">Absender</td>
+          <td>@_ownerDto?.Firstname</td>
+          <td>@_ownerDto?.Lastname</td>
+          <td>@_accountDto?.Iban</td>
+        </tr>
+        <tr class="align-middle">
+          <td class="d-none d-sm-table-cell">Zahlungsempfänger</td>
+          <td>@_beneficiaryDto?.FirstName</td>
+          <td>@_beneficiaryDto?.LastName</td>
+          <td>@_beneficiaryDto?.Iban</td>
+        </tr>
+        </tbody>
+      </table>
+
+      <div class="mb-3">
+        <InputFieldCurrency Id="amount" Label="Betrag" Placeholder="Betrag" @bind-Value="_transferModel.Amount" />
+      </div>
+      <div class="mb-3">
+        <InputFieldDate Id="transferDate" Label="Datum" Placeholder="Datum" @bind-Value="_transferModel.TransferDate" />
+      </div>
+      <div class="mb-3">
+        <InputFieldString Id="reason" Label="Grund" Placeholder="Grund" @bind-Value="_transferModel.TransferReason"/>
+      </div>
+
+      <div class="d-flex justify-content-center">
+        @if (!_isTransferSuccessful) {
+          <ButtonsSubmitLeaveCancel OnSubmit="HandleSubmit" OnLeave="LeaveForm" OnCancel="CancelOperation"/>
+        }
+        else {
+          <button class="btn btn-primary" @onclick="LeaveForm">Fertig</button>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+*@
+  

@@ -1,0 +1,27 @@
+@page "/owners"
+@using Microsoft.AspNetCore.Authorization
+@inherits BankingBlazorSsr.Ui.Common.BasePage
+
+@* @attribute [Authorize(Policy = "AdminPolicy")] *@
+@attribute [Authorize(Policy = "AdminPolicy")]
+
+<div class="container-fluid mt-3">
+
+  @if (Loading)
+  {
+    <p>Lade …</p>
+  }
+  else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+  {
+    <div class="alert alert-danger">@ErrorMessage</div>
+  }
+  else
+  {
+    <div class="row">
+      <div class="col-12 mx-1">
+        <OwnersTable Owners="@_ownerDtos" OnOpenOwner="OpenOwner" />
+      </div>
+    </div>
+  }
+
+</div>

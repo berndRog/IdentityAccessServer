@@ -1,0 +1,49 @@
+@page "/no-access"
+@using Microsoft.AspNetCore.Authorization
+@inject IHttpContextAccessor HttpContextAccessor
+
+@attribute [AllowAnonymous]
+
+<PageTitle>Zugriff verweigert</PageTitle>
+
+<div class="alert alert-warning" role="alert">
+  <h4 class="alert-heading">Zugriff verweigert</h4>
+  <p>Sie haben keine passende Rolle für den Zugriff auf diese Anwendung.</p>
+    
+  @if (HttpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated == true)
+  {
+    <hr>
+    <p class="mb-0">
+      <strong>Ihr Account:</strong> @HttpContextAccessor.HttpContext.User.Identity.Name
+    </p>
+        
+    <details class="mt-3">
+      <summary>Claims (Debug-Info)</summary>
+      <pre class="mt-2">@GetClaimsDebugInfo()</pre>
+    </details>
+        
+    <p class="mt-3">
+      <a href="/identity/logout" class="btn btn-primary">Abmelden</a>
+    </p>
+  }
+  else
+  {
+    <p class="mt-3">
+      <a href="/identity/login" class="btn btn-primary">Anmelden</a>
+    </p>
+  }
+</div>
+
+@code {
+  private string GetClaimsDebugInfo() {
+    
+    var user = HttpContextAccessor.HttpContext?.User;
+    if (user is null) return "No user context";
+        
+    var claims = user.Claims
+      .Select(c => $"{c.Type}: {c.Value}")
+      .ToList();
+        
+    return string.Join("\n", claims);
+  }
+}

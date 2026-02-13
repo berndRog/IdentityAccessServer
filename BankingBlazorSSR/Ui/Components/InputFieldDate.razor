@@ -1,0 +1,68 @@
+@using System.Globalization
+
+@typeparam TValue where TValue : struct 
+@* Ensure TValue is a value type (non-nullable) *@
+
+<div class="form-group row">
+  <label for="@Id" class="col-3 col-form-label">@Label</label>
+  <div class="col-9">
+    <input type="text" class="form-control" 
+           id="@Id" 
+           placeholder="@Placeholder"
+           @bind="FormattedValue" 
+           @oninput="OnValueChanged"/>
+    @if (!string.IsNullOrEmpty(_errorMessage)) {
+      <div class="text-danger">@_errorMessage</div>
+    }
+  </div>
+</div>
+
+@code {
+  [Parameter] public string Id { get; set; } = string.Empty;
+  [Parameter] public string Label { get; set; } = string.Empty;
+  [Parameter] public string Placeholder { get; set; } = string.Empty;
+  [Parameter] public TValue Value { get; set; } = default!; // ✅ Ensures TValue is initialized
+  [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+  [Parameter] public bool MustBeInFuture { get; set; } = false;
+
+  private string _errorMessage = string.Empty;
+
+  private string FormattedValue {
+    get => FormatValue(Value);
+    set {
+      if (TryParseValue(value, out TValue parsedValue)) {
+        if (!MustBeInFuture || (parsedValue is DateTime dateTime && dateTime > DateTime.Now)) {
+          Value = parsedValue;
+          _errorMessage = string.Empty;
+        }
+        else {
+          _errorMessage = "Das Datum muss in der Zukunft liegen.";
+        }
+      }
+      else {
+        _errorMessage = "Ungültige Eingabe für das Datum.";
+      }
+    }
+  }
+
+  private async Task OnValueChanged(ChangeEventArgs e) {
+    FormattedValue = e.Value?.ToString() ?? string.Empty;
+    await ValueChanged.InvokeAsync(Value);
+  }
+
+  private bool TryParseValue(string? input, out TValue result) {
+    if (typeof(TValue) == typeof(DateTime) && DateTime.TryParse(input, CultureInfo.CurrentCulture, DateTimeStyles.None, out var dateTimeValue)) {
+      result = (TValue)(object)dateTimeValue;
+      return true;
+    }
+    result = default!;
+    return false;
+  }
+
+  private string FormatValue(TValue value) {
+    return value switch {
+      DateTime d => d.ToString("d", CultureInfo.CurrentCulture),
+      _ => value.ToString() ?? string.Empty
+    };
+  }
+}

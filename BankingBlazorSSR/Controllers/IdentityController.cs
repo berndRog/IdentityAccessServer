@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BankingBlazorSSR.Controllers;
+namespace BankingBlazorSsr.Controllers;
 
 /// <summary>
 /// Handles authentication for the Blazor SSR client by delegating to ASP.NET Core authentication middleware.

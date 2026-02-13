@@ -1,0 +1,32 @@
+@startuml
+title OIDC Login Flow (Authorization Code)
+
+actor User
+participant "Blazor SSR Client" as Client
+participant "OIDC Middleware" as Middleware
+participant "Identity Provider\n(OpenIddict)" as IdP
+participant "Banking API" as API
+
+User -> Client : GET /
+Client -> Middleware : Not authenticated
+Middleware -> User : Redirect to /identity/login
+
+User -> Client : GET /identity/login
+Client -> Middleware : Challenge()
+
+Middleware -> IdP : /connect/authorize
+IdP -> User : Login page
+
+User -> IdP : enters credentials
+IdP -> Middleware : authorization code (redirect /signin-oidc)
+
+Middleware -> IdP : /connect/token (code)
+IdP -> Middleware : id_token + access_token
+
+Middleware -> Client : Auth cookie created
+
+User -> Client : GET /dispatcher
+Client -> API : GET /owners/me/profile (Bearer token)
+API -> Client : 200 OK
+
+@enduml

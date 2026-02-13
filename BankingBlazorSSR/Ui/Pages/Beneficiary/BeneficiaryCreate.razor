@@ -1,0 +1,26 @@
+@* @page "/accounts/{accountid:guid}/beneficiaries/create" *@
+@* *@
+@* <div class="container"> *@
+@*   <div class="row"> *@
+@*     <div class="col-md-6 offset-md-1"> *@
+@*       <div class="card shadow-sm"> *@
+@*         <div class="card-body"> *@
+@*           <h5 class="card-title">Zahlungsempfänger hinzufügen</h5> *@
+@*           @if (!string.IsNullOrEmpty(_errorMessage)) { *@
+@*             <div class="alert alert-danger">@_errorMessage</div> *@
+@*           } *@
+@*           <InputFieldString Id="firstname" Label="Vorname" Placeholder="Vorname" *@
+@*                             @bind-value="_beneficiaryCreate.Firstname"/> *@
+@*           <InputFieldString Id="lastname" Label="Nachname" Placeholder="Nachname" *@
+@*                             @bind-value="_beneficiaryCreate.Lastname"/> *@
+@*           <InputFieldString Id="iban" Label="IBAN" Placeholder="IBAN" @bind-value="_beneficiaryCreate.Iban"/> *@
+@*            *@
+@*           <div class="d-flex justify-content-center">  *@
+@*             <ButtonsSubmitLeaveCancel OnSubmit="HandleSubmit" OnLeave="LeaveForm" OnCancel="CancelOperation"/> *@
+@*           </div> *@
+@*         </div> *@
+@*       </div> *@
+@*     </div> *@
+@*   </div> *@
+@* </div> *@
+@* *@

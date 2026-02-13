@@ -1,0 +1,52 @@
+@page "/owner/provision"
+@using Microsoft.AspNetCore.Authorization
+@inherits BankingBlazorSsr.Ui.Common.BasePage
+@attribute [Authorize(Policy = "OwnersOnly")]
+
+<h1>Owner Provison</h1>
+
+@if (Loading)
+{
+  <p>Lade …</p>
+}
+else
+{
+
+  <h3>ID Token (vom Identity Provider)</h3>
+  <pre>@_idToken</pre>
+  <table class="table table-sm table-striped">
+    @foreach (var c in _idTokenLines)
+    {
+      <tr>
+        <td style="width:220px"><b>@c.Key</b></td>
+        <td>@c.Value</td>
+      </tr>
+    }
+  </table>
+  
+  
+  <h3>Access Token (für API)</h3>
+  <pre>@_accessToken</pre>
+  <table class="table table-sm table-striped">
+    @foreach (var c in _accessTokenLines)
+    {
+      <tr>
+        <td style="width:220px"><b>@c.Key</b></td>
+        <td>@c.Value</td>
+      </tr>
+    }
+  </table>
+  
+  
+  <h3>Application Identity (ClaimsPrincipal)</h3>
+  <table class="table">
+    @foreach (var c in _idTokenClaims)
+    {
+      <tr>
+        <td style="width:220px">@c.Type</td>
+        <td>@c.Value</td>
+      </tr>
+    }
+  </table>
+  
+}

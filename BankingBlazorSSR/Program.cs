@@ -1,56 +1,32 @@
 using System.Security.Claims;
-using BankingBlazorSSR.Api.Clients;
-using BankingBlazorSSR.Auth;
-using BankingBlazorSSR.UseCases.OwnerProfile;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using BankingBlazorSsr.Api.Clients;
+using BankingBlazorSsr.Auth;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-namespace BankingBlazorSSR;
+namespace BankingBlazorSsr;
 
 public sealed class Program {
    public static void Main(string[] args) {
       var builder = WebApplication.CreateBuilder(args);
+      
+      //--- Logging, HTTP Logging ----------------------------------------------
+      ConfigureLoginng(builder, builder.Services);
 
-      // -----------------------------------------------------------------------
-      // Logging, HTTP Logging
-      // -----------------------------------------------------------------------
-      builder.Logging.ClearProviders();
-      builder.Logging.AddConsole();
-      builder.Logging.AddDebug();
-
-      builder.Services.AddHttpLogging(o => {
-         o.LoggingFields =
-            HttpLoggingFields.RequestMethod |
-            HttpLoggingFields.RequestPath |
-            HttpLoggingFields.RequestQuery |
-            HttpLoggingFields.RequestHeaders |
-            HttpLoggingFields.ResponseStatusCode |
-            HttpLoggingFields.ResponseHeaders;
-
-         // Optional: bodies (DEV only). Be careful: can leak sensitive data.
-         o.LoggingFields |=
-            HttpLoggingFields.RequestBody |
-            HttpLoggingFields.ResponseBody;
-
-         // DEV only: logging Authorization header will print bearer tokens.
-         // NEVER enable this in production.
-         o.RequestHeaders.Add("Authorization");
-         o.MediaTypeOptions.AddText("application/json");
-      });
-
-      // -----------------------------------------------------------------------
-      // Configure services and modules
-      // -----------------------------------------------------------------------
+      //--- Configure services and modules -------------------------------------
+      // Blazor SSR with interactive server components
       ConfigureBlazorSSR(builder.Services, builder.Configuration);
-
-      ConfigureAuthN(builder.Services, builder.Configuration);
+      // OIDC Authentication (Cookie + OpenID Connect)
+      ConfigureAuthN(builder.Services, builder.Configuration, builder.Environment);
+      // Authorization policies (OwnersOnly, EmployeesOnly)
       ConfigureAuthZ(builder.Services);
 
       // -----------------------------------------------------------------------
-      // Middleware
-      // -----------------------------------------------------------------------
+      // Middleware pipeline configuration
       var app = builder.Build();
       if (!app.Environment.IsDevelopment()) {
          app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -58,17 +34,22 @@ public sealed class Program {
       }
 
       // HTTP logging middleware (useful during development/troubleshooting)
-      app.UseHttpLogging();
+      // app.UseHttpLogging();
 
+      // Security middlewares
       app.UseHttpsRedirection();
+      
+      // Serve static files (e.g., CSS, JS, images)
       app.UseStaticFiles();
 
       // Routing must be before auth middlewares and endpoint mapping
       // neede for /indentity/login and /identity/logout endpoints in IdentityController
       app.UseRouting();
       
+      // Authentication and Authorization middlewares
       app.UseAuthentication();
       app.UseAuthorization();
+      // Antiforgery middleware for CSRF protection (important for state-changing endpoints)
       app.UseAntiforgery();
 
       // -----------------------------------------------------------------------------
@@ -85,6 +66,40 @@ public sealed class Program {
       app.Run();
    }
 
+   /// <summary>
+   /// Configure logging providers and HTTP logging options.
+   /// </summary>
+   /// <param name="builder"></param>
+   /// <param name="services"></param>
+   private static void ConfigureLoginng( 
+      WebApplicationBuilder builder, 
+      IServiceCollection services
+   ) {
+      builder.Logging.ClearProviders();
+      builder.Logging.AddConsole();
+      builder.Logging.AddDebug();
+      
+      services.AddHttpLogging(o => {
+         o.LoggingFields =
+            HttpLoggingFields.RequestMethod |
+            HttpLoggingFields.RequestPath |
+            HttpLoggingFields.RequestQuery |
+            HttpLoggingFields.RequestHeaders |
+            HttpLoggingFields.ResponseStatusCode |
+            HttpLoggingFields.ResponseHeaders;
+      
+         // Optional: bodies (DEV only). Be careful: can leak sensitive data.
+         o.LoggingFields |=
+            HttpLoggingFields.RequestBody |
+            HttpLoggingFields.ResponseBody;
+      
+         // DEV only: logging Authorization header will print bearer tokens.
+         // NEVER enable this in production.
+         o.RequestHeaders.Add("Authorization");
+         o.MediaTypeOptions.AddText("application/json");
+      });
+   }
+   
    /// <summary>
    /// Configure Blazor Server-Side Rendering (SSR) with interactive server components.
    /// </summary>
@@ -109,34 +124,40 @@ public sealed class Program {
       // we implement /identity/login, /identity/logout as controller actions
       services.AddControllers();
       
+      //--- JSON options for API clients -----------------------------------------
+      services.AddSingleton(new JsonSerializerOptions {
+         WriteIndented = true,  // pretty-print for easier debugging (optional)
+         PropertyNameCaseInsensitive = true,
+         ReadCommentHandling = JsonCommentHandling.Skip,
+         AllowTrailingCommas = true,
+         NumberHandling = JsonNumberHandling.AllowReadingFromString,
+         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+         Converters = { new JsonStringEnumConverter() }
+      });
+      
       //--- Typed HTTP client for the Banking API / Communication ----------------
       // AccessTokenHandler attaches the access token to each request.
       services.AddTransient<AccessTokenHandler>();
 
-      services.AddHttpClient("BankingApi",
-         client => {
-            client.BaseAddress = new Uri(configuration["BankingApi:BaseUrl"]!);
-         })
-        .AddHttpMessageHandler<AccessTokenHandler>();
+      services.AddHttpClient("BankingApi", client => { 
+         client.BaseAddress = new Uri(configuration["BankingApi:BaseUrl"]!);
+         client.Timeout = TimeSpan.FromSeconds(30);
+      })
+      .AddHttpMessageHandler<AccessTokenHandler>();
 
-      services.AddScoped<OwnersClient>(sp => {
-         var http = sp.GetRequiredService<IHttpClientFactory>()
-            .CreateClient("BankingApi");
-         return new OwnersClient(http);
-      });
-
-      //-- Use Cases / Application ----------------------------------------------
-      services.AddScoped<PostOwnerProvision>();
-      services.AddScoped<GetOwnerProfile>();
-      services.AddScoped<UpdateOwnerProfile>();
+      services.AddScoped<OwnerClient>();
+      services.AddScoped<AccountClient>();
+      services.AddScoped<BeneficiaryClient>();
+      
    }
-
+   
    /// <summary>
    /// Configure OpenID Connect authentication with cookies as local session store.
    /// </summary>
    private static void ConfigureAuthN(
       IServiceCollection services,
-      IConfiguration config
+      IConfiguration config,
+      IWebHostEnvironment enviroment
    ) {
       var auth = config.GetSection("AuthServer");
 
@@ -197,11 +218,12 @@ public sealed class Program {
 
             // Map name and roles to your claim types
             options.TokenValidationParameters = new TokenValidationParameters {
-               NameClaimType = "preferred_username",
-               RoleClaimType = ClaimTypes.Role
+               NameClaimType = "preferred_username", 
+               RoleClaimType = "role"
             };
             
-            options.RequireHttpsMetadata = true;
+            //options.RequireHttpsMetadata = true;
+            options.RequireHttpsMetadata = !enviroment.IsDevelopment();
             
             // Events for debugging
             options.Events = new OpenIdConnectEvents {

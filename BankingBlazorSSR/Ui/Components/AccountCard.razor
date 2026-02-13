@@ -1,0 +1,33 @@
+@using System.Globalization
+@using BankingBlazorSsr.Core.Dto
+<div class="card shadow-sm w-100">
+  <div class="card-body">
+    <h5 class="card-title">Konto</h5>
+
+    @if (Account != null)
+    {
+      <table class="table table-sm table-striped">
+        <thead>
+        <tr>
+          <th class="fw-normal">Kontonummer</th>
+          <th class="fw-normal">Kontostand</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>@Account.Iban</td>
+          <td>@Account.Balance.ToString("C", CultureInfo.CurrentCulture)</td>
+        </tr>
+        </tbody>
+      </table>
+    }
+    else
+    {
+      <p>Keine Kontodaten verfügbar.</p>
+    }
+  </div>
+</div>
+
+@code {
+  [Parameter] public AccountDto? Account { get; set; }
+}

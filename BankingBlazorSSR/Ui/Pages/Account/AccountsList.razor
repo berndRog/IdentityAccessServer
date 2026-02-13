@@ -1,0 +1,15 @@
+@* @page "/accounts" *@
+@* @using Microsoft.AspNetCore.Authorization *@
+@* *@
+@* @attribute [Authorize(Policy = "AdminPolicy")] *@
+@* <div class="container-fluid mt-3"> *@
+@*   @if (!string.IsNullOrEmpty(_errorMessage)) { *@
+@*     <div class="alert alert-danger">@_errorMessage</div> *@
+@*   } *@
+@*    *@
+@*   <div class="row"> *@
+@*     <div class="col-12 mx-1"> *@
+@*       <AccountsTable Accounts="@_accountDtos" OnOpenAccount="@((Guid accountId) => OpenAccount(accountId))" /> *@
+@*     </div> *@
+@*   </div> *@
+@* </div> *@

@@ -1,0 +1,33 @@
+@startuml
+title First Login triggers Owner Provisioning
+
+actor User
+participant "Blazor SSR Client" as Client
+participant "OIDC Middleware" as Middleware
+participant "Identity Provider\n(OpenIddict)" as IdP
+participant "Banking API" as API
+participant "Owners Module" as Owners
+
+User -> Client : Login
+Client -> Middleware : Challenge()
+
+Middleware -> IdP : /connect/authorize
+User -> IdP : authenticate
+IdP -> Middleware : id_token (sub claim)
+Middleware -> Client : Auth cookie
+
+== First authenticated request ==
+
+Client -> API : GET /owners/me/profile
+API -> Owners : FindBySubject(sub)
+
+alt Owner exists
+    Owners -> API : OwnerProfile
+    API -> Client : 200 OK
+else First login
+    Owners -> Owners : Create Owner(sub, email, name)
+    Owners -> API : OwnerProfile
+    API -> Client : 200 OK (provisioned)
+end
+
+@enduml

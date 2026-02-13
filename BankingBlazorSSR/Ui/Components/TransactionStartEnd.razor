@@ -1,0 +1,42 @@
+@using BankingBlazorSsr.Ui.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@StartEndModel" OnValidSubmit="HandleValidSubmit">
+  <DataAnnotationsValidator />
+
+  <div class="container">
+    <div class="row g-3 justify-content-center">
+      <!-- Start-Datum -->
+      <div class="col-12 col-lg-4" style="max-width: 300px;">
+        <InputFieldDate Id="startDate"
+                        Label="Start"
+                        Placeholder="TT.MM.JJJJ"
+                        Value="StartEndModel.Start"
+                        ValueChanged="EventCallback.Factory.Create<DateTime>(this, value => StartEndModel.Start = value)" />
+      </div>
+
+      <!-- End-Datum -->
+      <div class="col-12 col-lg-4" style="max-width: 300px;">
+        <InputFieldDate Id="endDate"
+                        Label="Ende"
+                        Placeholder="TT.MM.JJJJ"
+                        Value="StartEndModel.End"
+                        ValueChanged="EventCallback.Factory.Create<DateTime>(this, value => StartEndModel.End = value)" />
+      </div>
+
+      <!-- Button -->
+      <div class="col-12 col-lg-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100" style="white-space: nowrap;">Abrufen</button>
+      </div>
+    </div>
+  </div>
+</EditForm>
+
+@code {
+  [Parameter] public TransactionStartEndModel StartEndModel { get; set; } = new ();
+  [Parameter] public EventCallback<TransactionStartEndModel> OnSubmit { get; set; }
+
+  private async Task HandleValidSubmit() {
+    await OnSubmit.InvokeAsync(StartEndModel);
+  }
+}

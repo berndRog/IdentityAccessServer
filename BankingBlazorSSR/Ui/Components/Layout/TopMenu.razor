@@ -1,0 +1,72 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+  <div class="container-fluid">
+
+    <a class="navbar-brand fw-bold" href="/">SuderBank</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topmenu"
+            aria-controls="topmenu" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="topmenu">
+
+      <AuthorizeView Context="auth">
+        <Authorized>
+
+          <ul class="navbar-nav me-auto">
+
+            @if (auth.User.IsInRole("Owner"))
+            {
+              <li class="nav-item">
+                <NavLink class="nav-link" href="/owner">Dashboard</NavLink>
+              </li>
+              <li class="nav-item">
+                <NavLink class="nav-link" href="/accounts">Konten</NavLink>
+              </li>
+              <li class="nav-item">
+                <NavLink class="nav-link" href="/transfers">Überweisungen</NavLink>
+              </li>
+            }
+
+            @if (auth.User.IsInRole("Employee"))
+            {
+              <li class="nav-item">
+                <NavLink class="nav-link" href="/admin">Admin</NavLink>
+              </li>
+              <li class="nav-item">
+                <NavLink class="nav-link" href="/owners">Owners</NavLink>
+              </li>
+            }
+
+          </ul>
+
+          <a class="btn btn-outline-danger btn-sm" href="@LogoutUrl">Abmelden</a>
+
+        </Authorized>
+
+        <NotAuthorized>
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <NavLink class="nav-link" href="/">Start</NavLink>
+            </li>
+          </ul>
+
+          <a class="btn btn-primary btn-sm" href="@LoginUrl">Anmelden</a>
+        </NotAuthorized>
+      </AuthorizeView>
+
+    </div>
+  </div>
+</nav>
+
+@code {
+  // Login mit ReturnUrl (aktuelle Seite)
+  private string LoginUrl =>
+    "/identity/login?returnUrl=" + Uri.EscapeDataString("/" + Nav.ToBaseRelativePath(Nav.Uri));
+
+  // serverseitiger Logout (Cookie + OIDC)
+  private string LogoutUrl => "/identity/logout";
+}

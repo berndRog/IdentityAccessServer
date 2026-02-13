@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-namespace BankingBlazorSSR.Api.Dtos;
+namespace BankingBlazorSsr.Api.Dtos;
 
 using System.ComponentModel.DataAnnotations;
 

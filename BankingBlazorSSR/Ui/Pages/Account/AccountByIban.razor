@@ -1,0 +1,23 @@
+@*@page "/accounts/iban/{Iban}"
+
+<div class="container mt-3">
+  @if (!string.IsNullOrEmpty(_errorMessage)) {
+    <div class="alert alert-danger">@_errorMessage</div>
+  }
+  
+  <div class="row">
+    <div class="col-12 mb-3 me-md-3">
+      <OwnerCard Owner="@_ownerDto"/>
+    </div>
+
+    <div class="col-12 mb-3">
+      <AccountCard Account="@_accountDto"/>
+    </div>
+
+    <!-- Buttons Row (wrapped in a column for proper alignment) -->
+    <div class="col-12">
+      <ButtonsTwo Button1Text="Überweisen" Button2Text="Kontoauszüge"
+                  OnButton1="HandleTransfers" OnButton2="HandleTransactions"/>
+    </div>
+  </div>
+</div>*@

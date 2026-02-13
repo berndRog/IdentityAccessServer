@@ -1,0 +1,19 @@
+@using BankingBlazorSsr.Core.Dto
+<div class="card shadow-sm w-100">
+  <div class="card-body">
+    <h5 class="card-title">Kontoinhaber</h5>
+    <div class="mb-2">
+      <label class="fw-normal">Name:</label>
+      <span class="ms-2">@Owner.Firstname @Owner.Lastname</span>
+    </div>
+    <div class="mb-2">
+      <label class="fw-normal">E-Mail:</label>
+      <span class="ms-2">@Owner.Email</span>
+    </div>
+  </div>
+</div>
+
+@code {
+  [Parameter] public required OwnerDto Owner { get; set; }
+}
+

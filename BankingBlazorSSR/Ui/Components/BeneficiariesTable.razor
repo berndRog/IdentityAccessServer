@@ -1,0 +1,45 @@
+@using BankingBlazorSsr.Core.Dto
+<div class="card shadow-sm w-100">
+  <div class="card-body">
+    <h5 class="card-title">Zahlungsempfänger</h5>
+
+    @if (Beneficiaries?.Any() == true) {
+      <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+        <table class="table table-sm table-striped table-hover">
+          <thead>
+          <tr>
+            <th class="fw-normal">Vorname</th>
+            <th class="fw-normal">Nachname</th>
+            <th class="fw-normal">Iban</th>
+            <th class="fw-normal">Aktionen</th>
+          </tr>
+          </thead>
+          <tbody>
+          @foreach (var beneficiary in Beneficiaries) {
+            <tr class="py-1">
+              <td>@beneficiary.FirstName</td>
+              <td>@beneficiary.LastName</td>
+              <td>@beneficiary.Iban</td>
+              <td>
+                <button class="btn btn-primary btn-sm" @onclick="() => OnOpenButton.InvokeAsync(beneficiary.Id)">
+                  @ButtonText
+                </button>
+              </td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    }
+    else {
+      <p>Keine Empfänger verfügbar.</p>
+    }
+  </div>
+</div>
+
+@code {
+  [Parameter] public string ButtonText { get; set; } = "Überweisen";
+  [Parameter] public List<BeneficiaryDto>? Beneficiaries { get; set; }
+  [Parameter] public EventCallback<Guid> OnOpenButton { get; set; }
+  [Parameter] public EventCallback<Guid> OnCreateBeneficiary { get; set; }
+}

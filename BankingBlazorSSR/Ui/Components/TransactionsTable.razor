@@ -1,0 +1,46 @@
+@using System.Globalization
+@using BankingBlazorSsr.Core.Dto
+
+<div class="card shadow-sm w-100">
+  <div class="card-body">
+    <h5 class="card-title">Buchungen</h5>
+
+    @if (TransactionListItems?.Any() == true) {
+      <div class="table-responsive"> <!-- Responsiv für kleinere Displays -->
+        <table class="table table-sm table-striped table-hover">
+          <thead>
+          <tr>
+            <th class="fw-normal">Datum</th>
+            <th class="fw-normal text-end">Betrag</th> <!-- Betrag rechtsbündig -->
+            <th class="fw-normal text-break">Grund</th>
+            <th class="fw-normal text-break">Vorname</th>
+            <th class="fw-normal text-break">Nachname</th>
+            <th class="fw-normal text-break">IBAN</th>
+          </tr>
+          </thead>
+          <tbody>
+          @foreach (var transactionListItem in TransactionListItems) {
+            <tr>
+              <td>@transactionListItem.Date.ToString("d", CultureInfo.CurrentCulture)</td>
+              <td class="text-end @(transactionListItem.Amount < 0 ? "text-danger" : "")">
+                @transactionListItem.Amount.ToString("C", CultureInfo.CurrentCulture)
+              </td> <!-- Negative Beträge in Rot -->
+              <td class="text-break">@transactionListItem.Description</td>
+              <td class="text-break">@transactionListItem.FirstName</td>
+              <td class="text-break">@transactionListItem.LastName</td>
+              <td class="text-break">@transactionListItem.Iban</td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    }
+    else {
+      <p>Keine Konten verfügbar.</p>
+    }
+  </div>
+</div>
+
+@code {
+  [Parameter] public List<TransactionListItemDto>? TransactionListItems { get; set; }
+}

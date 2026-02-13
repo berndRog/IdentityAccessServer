@@ -1,0 +1,29 @@
+@*@page "/accounts/{accountId:guid}/transfers/create"
+
+<div class="container mt-3">
+  @if (!string.IsNullOrEmpty(_errorMessage)) {
+    <div class="alert alert-danger">@_errorMessage</div>
+  }
+
+  <div class="col-12 mb-3 me-md-3">
+    <!-- reuse Blazor Component -->
+    <OwnerCard Owner="@_ownerDto"/>
+  </div>
+
+  <div class="col-12 mb-3">
+    <AccountCard Account="@_accountDto"/>
+  </div>
+
+  <div class="col-12 mb-3">
+    <BeneficiariesTable Beneficiaries="_beneficiaryDtos" 
+                        ButtonText="Überweisen"
+                        OnOpenButton="CreateTransfer"/>
+  </div>
+
+  <!-- Button placed outside the card and centered the button -->
+  <div class="d-flex justify-content-center">
+    <button class="btn btn-primary w-25 mx-2 mb-2" @onclick="CreateBeneficiary">
+      Neuer Empfänger
+    </button>
+  </div>
+</div>*@

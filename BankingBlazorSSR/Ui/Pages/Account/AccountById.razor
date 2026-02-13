@@ -1,0 +1,23 @@
+@* @page "/accounts/{id:guid}" *@
+@* *@
+@* <div class="container mt-3"> *@
+@*   @if (!string.IsNullOrEmpty(_errorMessage)) { *@
+@*     <div class="alert alert-danger">@_errorMessage</div> *@
+@*   } *@
+@*    *@
+@*   <div class="row"> *@
+@*     <div class="col-12 mb-3 me-md-3"> *@
+@*       <OwnerCard Owner="@_ownerDto"/> *@
+@*     </div> *@
+@* *@
+@*     <div class="col-12 mb-3"> *@
+@*       <AccountCard Account="@_accountDto"/> *@
+@*     </div> *@
+@* *@
+@*     <div class="col-12 mb-3"> *@
+@*       <BeneficiariesTable Beneficiaries="_beneficiaryDtos" /> *@
+@*     </div> *@
+@* *@
+@* *@
+@*   </div> *@
+@* </div> *@
