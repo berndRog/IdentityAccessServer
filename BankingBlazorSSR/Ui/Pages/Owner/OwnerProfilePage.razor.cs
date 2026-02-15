@@ -1,4 +1,5 @@
 using BankingBlazorSsr.Api.Clients;
+using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
 using BankingBlazorSsr.Ui.Common;
 using Microsoft.AspNetCore.Components;
@@ -14,7 +15,7 @@ namespace BankingBlazorSsr.Ui.Pages.Owner;
 public partial class OwnerProfilePage {
 
    // ---- Dependency Injection ------------------------------------------------
-   [Inject] private OwnerClient OwnerClient { get; set; } = default!;
+   [Inject] private IOwnerClient OwnerClient { get; set; } = default!;
    [Inject] private NavigationManager Navigation { get; set; } = default!;
    [Inject] private ILogger<OwnerProfilePage> Logger { get; set; } = default!;
    // ---- Navigation Context --------------------------------------------------

@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using BankingBlazorSsr.Api.Clients;
+using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
@@ -9,7 +10,7 @@ namespace BankingBlazorSsr.Ui.Pages.Owner;
 
 public partial class OwnerProvisonPage { // dont't use : BasePage here
 
-   [Inject] private OwnerClient Client { get; set; } = default!;
+   [Inject] private IOwnerClient Client { get; set; } = default!;
    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
