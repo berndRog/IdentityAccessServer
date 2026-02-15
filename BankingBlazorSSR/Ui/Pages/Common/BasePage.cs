@@ -1,3 +1,4 @@
+using BankingBlazorSsr.Api.Errors;
 using BankingBlazorSsr.Core;
 using Microsoft.AspNetCore.Components;
 

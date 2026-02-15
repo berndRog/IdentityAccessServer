@@ -1,54 +1,54 @@
 using System.Text.Json;
+using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
 using BankingBlazorSsr.Core;
-using BankingBlazorSsr.Core.Dto;
 namespace BankingBlazorSsr.Api.Clients;
 
 public sealed class EmployeeClient(
    IHttpClientFactory factory,
    JsonSerializerOptions json,
    ILogger<EmployeeClient> logger
-) : BaseApiClient<EmployeeClient>(factory, json, logger)
+) : BaseApiClient<EmployeeClient>(factory, json, logger), IEmployeeClient
 {
-   private const string MeBase = "bankingapi/v1/employee/me";
+   private const string MeBase = "bankingapi/v1/employees/me";
 
-   // POST bankingapi/v1/owners/me/provisioned  -> 200 OK + OwnerProvisionDto
-   public Task<Result<ProvisionDto>> PostProvisionAsync(CancellationToken ct = default) 
+   // POST /employees/me/provisioned 
+   public Task<Result<ProvisionDto>> PostProvisionAsync(CancellationToken ct) 
       => SendAsync<ProvisionDto>(
          () => _http.PostAsync($"{MeBase}/provisioned", content: null, ct), ct);
 
-   // GET bankingapi/v1/owners/me/profile -> 200 OK + OwnerProfileDto
-   public Task<Result<EmployeeDto>> GetProfileAsync(CancellationToken ct = default) 
+   // GET /employees/me/profile
+   public Task<Result<EmployeeDto>> GetProfileAsync(CancellationToken ct) 
       => SendAsync<EmployeeDto>(() => _http.GetAsync($"{MeBase}/profile", ct), ct);
-
-   // PUT bankingapi/v1/owners/me/profile -> 200 OK + OwnerProfileDto
+   
+   // PUT /employees/me/profile 
    public Task<Result<EmployeeDto>> UpdateProfileAsync(
-      OwnerDto dto,
+      EmployeeDto dto,
       CancellationToken ct = default
    ) => SendAsync<EmployeeDto>(
          () => _http.PutAsJsonAsync($"{MeBase}/profile", dto, ct), ct);
 
-   // GET /owners
-   public Task<Result<IEnumerable<OwnerDto>>> GetAllAsync(CancellationToken ct = default) 
-      => SendAsync<IEnumerable<OwnerDto>>(
-         () => _http.GetAsync("owners", ct), ct);
+   // GET /employees
+   public Task<Result<IEnumerable<EmployeeDto>>> GetAllAsync(CancellationToken ct) 
+      => SendAsync<IEnumerable<EmployeeDto>>(
+         () => _http.GetAsync("employees", ct), ct);
 
-   // GET /owners/{ownerId}
-   public Task<Result<OwnerDto>> GetByIdAsync(Guid ownerId, CancellationToken ct = default) 
-      => SendAsync<OwnerDto>(
-         () => _http.GetAsync($"owners/{ownerId}", ct), ct);
+   // GET /employees/{ownerId}
+   public Task<Result<EmployeeDto>> GetByIdAsync(Guid Id, CancellationToken ct) 
+      => SendAsync<EmployeeDto>(
+         () => _http.GetAsync($"employees/{Id}", ct), ct);
 
-   // GET /owners/username/?username={userName}
-   public Task<Result<OwnerDto>> GetByUserNameAsync(string userName, CancellationToken ct = default) 
-      => SendAsync<OwnerDto>(
+   // GET /employees/username/?username={userName}
+   public Task<Result<EmployeeDto>> GetByUserNameAsync(string userName, CancellationToken ct) 
+      => SendAsync<EmployeeDto>(
          () => _http.GetAsync($"owners/username/?username={Uri.EscapeDataString(userName)}", ct), ct);
 
-   // GET /owners/name/?name={name}
-   public Task<Result<IEnumerable<OwnerDto>>> GetByNameAsync(string name, CancellationToken ct = default) 
-      => SendAsync<IEnumerable<OwnerDto>>(
+   // GET /employees/name/?name={name}
+   public Task<Result<IEnumerable<EmployeeDto>>> GetByNameAsync(string name, CancellationToken ct) 
+      => SendAsync<IEnumerable<EmployeeDto>>(
          () => _http.GetAsync($"owners/name/?name={Uri.EscapeDataString(name)}", ct),ct);
 
-   // GET /owners/exists/?username={userName} -> bool body
+   // GET /employees/exists/?username={userName} -> bool body
    public Task<Result<bool>> ExistsByUserNameAsync(string userName, CancellationToken ct = default) 
       => SendAsync<bool>(
          () => _http.GetAsync($"owners/exists/?username={Uri.EscapeDataString(userName)}", ct), ct);

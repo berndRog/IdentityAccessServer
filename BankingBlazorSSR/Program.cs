@@ -1,8 +1,9 @@
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BankingBlazorSsr.Api.Auth;
 using BankingBlazorSsr.Api.Clients;
-using BankingBlazorSsr.Auth;
+using BankingBlazorSsr.Api.Contracts;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpLogging;
@@ -145,9 +146,9 @@ public sealed class Program {
       })
       .AddHttpMessageHandler<AccessTokenHandler>();
 
-      services.AddScoped<OwnerClient>();
-      services.AddScoped<EmployeeClient>();
-      services.AddScoped<AccountClient>();
+      services.AddScoped<IOwnerClient,OwnerClient>();
+      services.AddScoped<IEmployeeClient,EmployeeClient>();
+      services.AddScoped<IAccountClient, AccountClient>();
    }
    
    /// <summary>

@@ -1,4 +1,4 @@
-namespace BankingBlazorSsr.Core;
+namespace BankingBlazorSsr.Api.Errors;
 
 public sealed record ApiError(
    int Status,              // HTTP status code (409, 422, ...)

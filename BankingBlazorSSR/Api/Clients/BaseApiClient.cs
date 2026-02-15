@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using BankingBlazorSsr.Api.Errors;
 using BankingBlazorSsr.Core;
 using Microsoft.AspNetCore.Mvc;
 namespace BankingBlazorSsr.Api.Clients;

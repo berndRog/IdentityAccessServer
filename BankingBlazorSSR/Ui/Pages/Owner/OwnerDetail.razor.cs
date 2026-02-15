@@ -1,6 +1,6 @@
+using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
 using BankingBlazorSsr.Core;
-using BankingBlazorSsr.Core.Dto;
 using Microsoft.AspNetCore.Components;
 namespace BankingBlazorSsr.Ui.Pages.Owner;
 
@@ -24,7 +24,7 @@ public partial class OwnerDetail { // dont use : BasePage here
       Loading = true; 
       ErrorMessage = null; 
       
-      var resultOwner = await OwnerClient.GetById(Id);
+      var resultOwner = await OwnerClient.GetByIdAsync(Id);
       if (resultOwner.IsFailure) {
          HandleError(resultOwner.Error);
          return;

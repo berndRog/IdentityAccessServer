@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BankingBlazorSsr.Api.Clients;
-
-namespace BankingBlazorSsr.Controllers;
+namespace BankingBlazorSsr.Ui.Controllers;
 
 [Authorize]
 public sealed class EntryController(

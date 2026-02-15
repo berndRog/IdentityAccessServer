@@ -1,3 +1,4 @@
+using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
 using BankingBlazorSsr.Core;
 using BankingBlazorSsr.Ui.Common;
@@ -14,7 +15,7 @@ public partial class OwnersList: BasePage {
 
    protected override async Task OnInitializedAsync() {
       
-      var result = await ownerClient.GetAll();
+      var result = await ownerClient.GetAllAsync();
       if (result.IsFailure) {
          HandleError(result.Error);
          return;

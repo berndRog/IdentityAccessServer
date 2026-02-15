@@ -1,3 +1,4 @@
+using BankingBlazorSsr.Api.Errors;
 namespace BankingBlazorSsr.Core;
 
 public sealed class Result<T> {

@@ -1,4 +1,4 @@
-﻿namespace BankingBlazorSsr.Core.Dto;
+﻿namespace BankingBlazorSsr.Api.Dtos;
 
 /// <summary>
 /// TransactionDto (Buchung)

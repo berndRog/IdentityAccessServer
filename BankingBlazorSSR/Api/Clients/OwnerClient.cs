@@ -1,14 +1,14 @@
 using System.Text.Json;
+using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
 using BankingBlazorSsr.Core;
-using BankingBlazorSsr.Core.Dto;
 namespace BankingBlazorSsr.Api.Clients;
 
 public sealed class OwnerClient(
    IHttpClientFactory factory,
    JsonSerializerOptions json,
    ILogger<OwnerClient> logger
-) : BaseApiClient<OwnerClient>(factory, json, logger)
+) : BaseApiClient<OwnerClient>(factory, json, logger), IOwnerClient
 {
    private const string MeBase = "bankingapi/v1/owners/me";
 
