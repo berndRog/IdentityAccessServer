@@ -42,6 +42,14 @@
                                               @bind-Value="_customerDto.Lastname"
                                               Placeholder="dein Nachname ..."/>
                         </div>
+
+                        <div class="col-12">
+                            <InputFieldString Id="companyName"
+                                              Label="Firma (optional)"
+                                              Placeholder="Firma"
+                                              @bind-Value="_customerDto.CompanyName" />
+                        </div>
+
                         <div class="col-12">
                             <InputFieldString Id="email" 
                                               Label="E-Mail" 

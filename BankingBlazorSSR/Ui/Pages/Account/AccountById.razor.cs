@@ -4,6 +4,7 @@ using BankingBlazorSsr.Api.Errors;
 using BankingBlazorSsr.Core;
 using BankingBlazorSsr.Ui.Common;
 using Microsoft.AspNetCore.Components;
+
 namespace BankingBlazorSsr.Ui.Pages.Account;
 
 public partial class AccountById(
@@ -13,10 +14,13 @@ public partial class AccountById(
 ) : BasePage, IDisposable {
    [Parameter] public required Guid Id { get; set; }
 
+   [Parameter, SupplyParameterFromQuery]
+   public string? ReturnUrl { get; set; }
+
    private readonly CancellationTokenSource _cts = new();
 
    private CustomerDto? _customerDto;
-   private BankingBlazorSsr.Api.Dtos.AccountDto? _accountDto;
+   private AccountDto? _accountDto;
    private List<BeneficiaryDto> _beneficiaryDtos = [];
 
    public void Dispose() {
@@ -32,7 +36,7 @@ public partial class AccountById(
          var ct = _cts.Token;
 
          _customerDto = CommonUser.CustomerDto;
-         
+
          logger.LogInformation("AccountDetail: OnInitializedAsync Id: {Id}", Id);
          var resultAccount = await accountClient.GetAccountByIdAsync(Id, ct);
          if (resultAccount.IsFailure) {
@@ -64,6 +68,15 @@ public partial class AccountById(
          Loading = false;
          await InvokeAsync(StateHasChanged);
       }
+   }
+
+   private void GoBack() {
+      if (!string.IsNullOrWhiteSpace(ReturnUrl)) {
+         navigationManager.NavigateTo(ReturnUrl);
+         return;
+      }
+
+      navigationManager.NavigateTo("javascript:history.back()", forceLoad: true);
    }
 
    private void SetErrorAndLog(string message, ApiError? error) {

@@ -3,6 +3,7 @@ using BankingBlazorSsr.Api.Dtos;
 using BankingBlazorSsr.Core;
 using BankingBlazorSsr.Ui.Common;
 using Microsoft.AspNetCore.Components;
+
 namespace BankingBlazorSsr.Ui.Pages.Customer;
 
 public partial class CustomerDetail : IDisposable {
@@ -13,6 +14,9 @@ public partial class CustomerDetail : IDisposable {
    [Inject] private ILogger<CustomerDetail> logger { get; set; } = default!;
 
    [Parameter] public Guid Id { get; set; }
+
+   [Parameter, SupplyParameterFromQuery]
+   public string? ReturnUrl { get; set; }
 
    private readonly CancellationTokenSource _cts = new();
 
@@ -66,6 +70,17 @@ public partial class CustomerDetail : IDisposable {
       }
    }
 
+   private void GoBack() {
+      // If this page is reached from a list/detail flow, ReturnUrl takes precedence.
+      if (!string.IsNullOrWhiteSpace(ReturnUrl)) {
+         NavigationManager.NavigateTo(ReturnUrl);
+         return;
+      }
+
+      // If user came here directly (e.g., after Save), a sane fallback is the profile page.
+      NavigationManager.NavigateTo("/customers/profile", forceLoad: true);
+   }
+
    private void OpenAccount(Guid accountId) {
       var iban = _accountDtos.FirstOrDefault(a => a.Id == accountId)?.IbanString;
       if (string.IsNullOrWhiteSpace(iban)) {
@@ -73,8 +88,12 @@ public partial class CustomerDetail : IDisposable {
          return;
       }
 
-      logger.LogInformation("CustomerDetail: nav: /accounts/iban/{Iban}", iban);
-      NavigationManager.NavigateTo($"/accounts/iban/{iban}");
+      var target = $"/accounts/iban/{iban}";
+      if (!string.IsNullOrWhiteSpace(ReturnUrl))
+         target += $"?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}";
+
+      logger.LogInformation("CustomerDetail: nav: {Target}", target);
+      NavigationManager.NavigateTo(target);
    }
 
    private void LeaveForm() {

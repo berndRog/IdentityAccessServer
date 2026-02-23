@@ -179,6 +179,7 @@ public sealed class Program {
       services.AddScoped<ICustomerClient, CustomerClient>();
       services.AddScoped<IEmployeeClient, EmployeeClient>();
       services.AddScoped<IAccountClient, AccountClient>();
+      services.AddScoped<ITransferClient, TransferClient>();
    }
 
    /// <summary>

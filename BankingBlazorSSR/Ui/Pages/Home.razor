@@ -1,6 +1,7 @@
 @page "/"
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
 @attribute [AllowAnonymous]
 
 <PageTitle>Banking Client</PageTitle>
@@ -11,7 +12,9 @@
   <AuthorizeView Context="auth">
     <NotAuthorized>
       <p class="text-muted">
-        Du bist nicht angemeldet. Bitte oben im Menü auf <b>Anmelden</b> klicken.
+        Sie sind angemeldet. Bitte oben im Menü auf
+        <a href="@LoginUrl" class="link-primary fw-semibold">Anmelden</a>
+        klicken.
       </p>
     </NotAuthorized>
 
@@ -50,3 +53,9 @@
     </Authorized>
   </AuthorizeView>
 </div>
+
+@code {
+  private string CurrentRelativeUrl => Nav.ToBaseRelativePath(Nav.Uri);
+  private string LoginUrl =>
+    "/identity/login?returnUrl=" + Uri.EscapeDataString("/" + CurrentRelativeUrl);
+}

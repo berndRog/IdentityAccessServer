@@ -3,14 +3,27 @@
 @inherits BankingBlazorSsr.Ui.Common.BasePage
 @attribute [Authorize(Roles = "Customer, Employee")]
 
+<PageTitle>Konten</PageTitle>
+
 <div class="container-fluid mt-3">
-  @if (!string.IsNullOrEmpty(ErrorMessage)) {
+  @if (Loading)
+  {
+    <p>Lade …</p>
+  }
+  else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+  {
     <div class="alert alert-danger">@ErrorMessage</div>
   }
-
-  <div class="row">
-    <div class="col-12 mx-1">
-      <AccountsTable AccountDtos="@_accountDtos" OnOpenAccount="@((Guid accountId) => OpenAccount(accountId))" />
+  else
+  {
+    <div class="row">
+      <div class="col-12 mx-1">
+        <AccountsTable AccountDtos="@_accountDtos" OnOpenAccount="@((Guid accountId) => OpenAccount(accountId))" />
+      </div>
     </div>
-  </div>
+
+    <div class="d-flex justify-content-center mt-3">
+      <button type="button" class="btn btn-outline-primary action-btn" @onclick="GoBack">Zurück</button>
+    </div>
+  }
 </div>

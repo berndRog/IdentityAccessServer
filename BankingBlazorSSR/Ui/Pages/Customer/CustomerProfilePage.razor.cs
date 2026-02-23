@@ -64,6 +64,17 @@ public partial class CustomerProfilePage : IDisposable {
 
          _customerDto = result.Value ?? new CustomerDto();
 
+         // Normalize loaded values so the form renders clean data
+         _customerDto.EmailString = _customerDto.EmailString?.Trim() ?? string.Empty;
+         _customerDto.Firstname = _customerDto.Firstname?.Trim() ?? string.Empty;
+         _customerDto.Lastname = _customerDto.Lastname?.Trim() ?? string.Empty;
+
+         _customerDto.CompanyName = string.IsNullOrWhiteSpace(_customerDto.CompanyName) ? null : _customerDto.CompanyName.Trim();
+         _customerDto.Street = string.IsNullOrWhiteSpace(_customerDto.Street) ? null : _customerDto.Street.Trim();
+         _customerDto.PostalCode = string.IsNullOrWhiteSpace(_customerDto.PostalCode) ? null : _customerDto.PostalCode.Trim();
+         _customerDto.City = string.IsNullOrWhiteSpace(_customerDto.City) ? null : _customerDto.City.Trim();
+         _customerDto.Country = string.IsNullOrWhiteSpace(_customerDto.Country) ? null : _customerDto.Country.Trim();
+
          // Store snapshot for Cancel
          _originalCustomerDto = Clone(_customerDto);
 
@@ -135,6 +146,20 @@ public partial class CustomerProfilePage : IDisposable {
       _saveError = null;
       _saveOk = null;
 
+      // Normalize required fields
+      _customerDto.EmailString = _customerDto.EmailString?.Trim() ?? string.Empty;
+
+      // Normalize optional inputs (optional but if present must meet MinLength)
+      _customerDto.CompanyName = string.IsNullOrWhiteSpace(_customerDto.CompanyName)
+         ? null
+         : _customerDto.CompanyName.Trim();
+
+      // Normalize optional address fields to avoid accidental whitespace
+      _customerDto.Street = string.IsNullOrWhiteSpace(_customerDto.Street) ? null : _customerDto.Street.Trim();
+      _customerDto.PostalCode = string.IsNullOrWhiteSpace(_customerDto.PostalCode) ? null : _customerDto.PostalCode.Trim();
+      _customerDto.City = string.IsNullOrWhiteSpace(_customerDto.City) ? null : _customerDto.City.Trim();
+      _customerDto.Country = string.IsNullOrWhiteSpace(_customerDto.Country) ? null : _customerDto.Country.Trim();
+
       Logger.LogDebug("Save customer profile: {@Profile}", _customerDto);
 
       // Prevent API call if invalid
@@ -178,6 +203,9 @@ public partial class CustomerProfilePage : IDisposable {
          }
 
          var target = $"/customers/{id}";
+         if (!string.IsNullOrWhiteSpace(ReturnUrl))
+            target += $"?returnUrl={Uri.EscapeDataString(ReturnUrl)}";
+
          Logger.LogInformation("CustomerProfilePage: navigate to {Target}", target);
 
          // Let the UI render 'Saved.' before leaving (optional but helps debugging/UX)
@@ -207,6 +235,7 @@ public partial class CustomerProfilePage : IDisposable {
       Id = src.Id,
       Firstname = src.Firstname,
       Lastname = src.Lastname,
+      CompanyName = src.CompanyName,
       EmailString = src.EmailString,
       Street = src.Street,
       PostalCode = src.PostalCode,

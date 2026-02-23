@@ -2,6 +2,7 @@ using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
 using BankingBlazorSsr.Ui.Common;
 using Microsoft.AspNetCore.Components;
+
 namespace BankingBlazorSsr.Ui.Pages.Customer;
 
 public partial class CustomersList : BasePage, IDisposable {
@@ -9,6 +10,9 @@ public partial class CustomersList : BasePage, IDisposable {
    [Inject] private ICustomerClient CustomerClient { get; set; } = default!;
    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
    [Inject] private ILogger<CustomersList> Logger { get; set; } = default!;
+
+   [Parameter, SupplyParameterFromQuery]
+   public string? ReturnUrl { get; set; }
 
    private readonly CancellationTokenSource _cts = new();
 
@@ -45,8 +49,22 @@ public partial class CustomersList : BasePage, IDisposable {
       }
    }
 
+   private void GoBack() {
+      if (!string.IsNullOrWhiteSpace(ReturnUrl)) {
+         NavigationManager.NavigateTo(ReturnUrl);
+         return;
+      }
+
+      // Fallback: browser history
+      NavigationManager.NavigateTo("javascript:history.back()", forceLoad: true);
+   }
+
    private void OpenCustomer(Guid customerId) {
-      Logger.LogInformation("CustomersList: nav: /customers/{CustomerId}", customerId);
-      NavigationManager.NavigateTo($"/customers/{customerId}");
+      var target = $"/customers/{customerId}";
+      if (!string.IsNullOrWhiteSpace(ReturnUrl))
+         target += $"?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}";
+
+      Logger.LogInformation("CustomersList: nav: {Target}", target);
+      NavigationManager.NavigateTo(target);
    }
 }

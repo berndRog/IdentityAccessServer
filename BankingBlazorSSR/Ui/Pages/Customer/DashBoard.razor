@@ -1,5 +1,5 @@
-@page "/employee"
+@page "/customer"
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize(Policy = "EmployeesOnly")]
+@attribute [Authorize(Roles = "Customer")]
 
 <h1>Employee Dashboard</h1>

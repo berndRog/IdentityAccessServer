@@ -6,21 +6,17 @@ public sealed record EmployeeDto {
    public Guid Id { get; set; } = Guid.Empty;
    
    [Required]
-   [StringLength(100, MinimumLength = 2,
-      ErrorMessage = "First name must be between 2 and 80 characters.")]
+   [MinLength(2, ErrorMessage = "Vorname must mindestens 2 Zeichen lang sein.")]
+   [MaxLength(100, ErrorMessage = "Vorname darf maximal 100 Zeichen lang sein.")]
    public string Firstname { get; set; } = string.Empty;
-
+   
    [Required]
-   [StringLength(100, MinimumLength = 2,
-      ErrorMessage = "Last name must be between 2 and 80 characters.")]
+   [MinLength(2, ErrorMessage = "Nachname must mindestens 2 Zeichen lang sein.")]
+   [MaxLength(100, ErrorMessage = "Nachname darf maximal 100 Zeichen lang sein.")]
    public string Lastname { get; set; } = string.Empty;
    
-   [StringLength(100, MinimumLength = 2, 
-      ErrorMessage = "Company name must be less then 80 characters.")]
-   public string? CompanyName { get; set; }
-   
    [Required]
-   [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+   [EmailAddress(ErrorMessage = "Bitte geben Sie eine zulässige E-Mail-Adresse ein.")]
    [StringLength(254)] // RFC 5321 practical limit
    public string EmailString { get; set; } = string.Empty;
 

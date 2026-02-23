@@ -24,15 +24,18 @@
           <ul class="navbar-nav">
             @if (auth.User.IsInRole("Customer"))
             {
-              <li class="nav-item"><NavLink class="nav-link" href="/owner">Dashboard</NavLink></li>
-              <li class="nav-item"><NavLink class="nav-link" href="/accounts">Konten</NavLink></li>
-              <li class="nav-item"><NavLink class="nav-link" href="/transfers">Überweisungen</NavLink></li>
+              <li class="nav-item"><NavLink class="nav-link" href="/customer">Dashboard</NavLink></li>
+              <li class="nav-item"><NavLink class="nav-link" href='@WithReturnUrl("/accounts")'>Konten</NavLink></li>
+              <li class="nav-item"><NavLink class="nav-link" href='@WithReturnUrl("/transfers")'>Überweisungen</NavLink></li>
             }
 
             @if (auth.User.IsInRole("Employee"))
             {
-              <li class="nav-item"><NavLink class="nav-link" href="/admin">Admin</NavLink></li>
-              <li class="nav-item"><NavLink class="nav-link" href="/customers">CustomerDtoDtos</NavLink></li>
+              <li class="nav-item"><NavLink class="nav-link" href="/employee">Dashboard</NavLink></li>
+              <li class="nav-item"><NavLink class="nav-link" href='@WithReturnUrl("/customers")'>Kunden</NavLink></li>
+              <li class="nav-item"><NavLink class="nav-link" href='@WithReturnUrl("/accounts")'>Konten</NavLink></li>
+
+              <li class="nav-item"><NavLink class="nav-link" href='@WithReturnUrl("/employees")'>Mitarbeiter</NavLink></li>
             }
           </ul>
 
@@ -43,9 +46,9 @@
         </Authorized>
 
         <NotAuthorized>
-          <ul class="navbar-nav">
-            <li class="nav-item"><NavLink class="nav-link" href="/">Start</NavLink></li>
-          </ul>
+          @* <ul class="navbar-nav"> *@
+          @*   <li class="nav-item"><NavLink class="nav-link" href="/">Start</NavLink></li> *@
+          @* </ul> *@
 
           <a class="btn btn-primary btn-sm ms-sm-auto mt-2 mt-sm-0" href="@LoginUrl">
             Anmelden
@@ -59,9 +62,15 @@
 
 
 @code {
+  // Current relative URL incl. query so we can return back.
+  private string CurrentRelativeUrl => Nav.ToBaseRelativePath(Nav.Uri);
+
+  private string WithReturnUrl(string targetPath)
+    => targetPath + "?returnUrl=" + Uri.EscapeDataString("/" + CurrentRelativeUrl);
+
   // Login mit ReturnUrl (aktuelle Seite)
   private string LoginUrl =>
-    "/identity/login?returnUrl=" + Uri.EscapeDataString("/entry");
+    "/identity/login?returnUrl=" + Uri.EscapeDataString("/" + CurrentRelativeUrl);
 
 
   // serverseitiger Logout (Cookie + OIDC)

@@ -21,13 +21,6 @@
       </div>
     }
 
-    @if (!string.IsNullOrWhiteSpace(EmployeeDto.CompanyName)) {
-      <div class="mb-2">
-        <label class="fw-normal">Firma:</label>
-        <span class="ms-2">@EmployeeDto.CompanyName</span>
-      </div>
-    }
-
     @if (!string.IsNullOrWhiteSpace(EmployeeDto.PhoneString)) {
       <div class="mb-2">
         <label class="fw-normal">Telefon:</label>

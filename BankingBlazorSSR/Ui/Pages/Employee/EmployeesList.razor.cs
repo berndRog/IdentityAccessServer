@@ -1,9 +1,6 @@
 using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
-using BankingBlazorSsr.Ui.Common;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Logging;
-
 namespace BankingBlazorSsr.Ui.Pages.Employee;
 
 public partial class EmployeesList : IDisposable {
@@ -11,6 +8,9 @@ public partial class EmployeesList : IDisposable {
    [Inject] private IEmployeeClient EmployeeClient { get; set; } = default!;
    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
    [Inject] private ILogger<EmployeesList> Logger { get; set; } = default!;
+
+   [Parameter, SupplyParameterFromQuery]
+   public string? ReturnUrl { get; set; }
 
    private readonly CancellationTokenSource _cts = new();
 
@@ -47,15 +47,28 @@ public partial class EmployeesList : IDisposable {
       }
    }
 
-   private void OpenEmployee(Guid employeeId) {
-      if (employeeId == Guid.Empty) {
-         ErrorMessage = "Employee Id is missing. Add `Id` to EmployeeDto and pass it from the API.";
-         Logger.LogWarning("EmployeesList: OpenEmployee called with empty id. EmployeeDto currently has no Id.");
+   private void GoBack() {
+      if (!string.IsNullOrWhiteSpace(ReturnUrl)) {
+         NavigationManager.NavigateTo(ReturnUrl);
          return;
       }
 
-      Logger.LogInformation("EmployeesList: nav: /employees/{EmployeeId}", employeeId);
-      NavigationManager.NavigateTo($"/employees/{employeeId}");
+      // Fallback: browser history
+      NavigationManager.NavigateTo("javascript:history.back()", forceLoad: true);
+   }
+
+   private void OpenEmployee(Guid employeeId) {
+      // if (employeeId == Guid.Empty) {
+      //    ErrorMessage = "Employee Id is missing. Add `Id` to EmployeeDto and pass it from the API.";
+      //    Logger.LogWarning("EmployeesList: OpenEmployee called with empty id. EmployeeDto currently has no Id.");
+      //    return;
+      // }
+
+      var target = $"/employees/{employeeId}";
+      if (!string.IsNullOrWhiteSpace(ReturnUrl))
+         target += $"?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}";
+
+      Logger.LogInformation("EmployeesList: nav: {Target}", target);
+      NavigationManager.NavigateTo(target);
    }
 }
-

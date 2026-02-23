@@ -65,6 +65,14 @@ public partial class EmployeeProfilePage : IDisposable {
 
          _employeeDto = result.Value ?? new EmployeeDto();
 
+         // Normalize loaded values so the form renders clean data
+         _employeeDto.EmailString = _employeeDto.EmailString?.Trim() ?? string.Empty;
+         _employeeDto.Firstname = _employeeDto.Firstname?.Trim() ?? string.Empty;
+         _employeeDto.Lastname = _employeeDto.Lastname?.Trim() ?? string.Empty;
+         _employeeDto.PersonnelNumber = _employeeDto.PersonnelNumber?.Trim() ?? string.Empty;
+
+         _employeeDto.PhoneString = string.IsNullOrWhiteSpace(_employeeDto.PhoneString) ? null : _employeeDto.PhoneString.Trim();
+
          // Store snapshot for Cancel
          _originalEmployeeDto = Clone(_employeeDto);
 
@@ -118,6 +126,15 @@ public partial class EmployeeProfilePage : IDisposable {
       _saving = true;
       _saveError = null;
       _saveOk = null;
+
+      // Normalize required fields
+      _employeeDto.EmailString = _employeeDto.EmailString?.Trim() ?? string.Empty;
+      _employeeDto.Firstname = _employeeDto.Firstname?.Trim() ?? string.Empty;
+      _employeeDto.Lastname = _employeeDto.Lastname?.Trim() ?? string.Empty;
+      _employeeDto.PersonnelNumber = _employeeDto.PersonnelNumber?.Trim() ?? string.Empty;
+
+      // Normalize optional fields
+      _employeeDto.PhoneString = string.IsNullOrWhiteSpace(_employeeDto.PhoneString) ? null : _employeeDto.PhoneString.Trim();
 
       Logger.LogDebug("Save employee profile: {@Profile}", _employeeDto);
 
@@ -177,7 +194,6 @@ public partial class EmployeeProfilePage : IDisposable {
       Id = src.Id,
       Firstname = src.Firstname,
       Lastname = src.Lastname,
-      CompanyName = src.CompanyName,
       EmailString = src.EmailString,
       PhoneString = src.PhoneString,
       PersonnelNumber = src.PersonnelNumber,
