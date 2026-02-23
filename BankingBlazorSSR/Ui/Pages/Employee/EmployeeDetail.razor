@@ -1,0 +1,19 @@
+@page "/employees/{Id:guid}"
+@using Microsoft.AspNetCore.Authorization
+@inherits BankingBlazorSsr.Ui.Common.BasePage
+@attribute [Authorize(Roles = "Employee")]
+
+<PageTitle>Mitarbeiter</PageTitle>
+
+<div class="container mt-3">
+  @if (!string.IsNullOrEmpty(ErrorMessage)) {
+    <div class="alert alert-danger">@ErrorMessage</div>
+  }
+
+  <div class="row">
+    <div class="col-12 mb-1 me-md-1">
+      <EmployeeCard EmployeeDto="@_employeeDto" />
+    </div>
+  </div>
+</div>
+

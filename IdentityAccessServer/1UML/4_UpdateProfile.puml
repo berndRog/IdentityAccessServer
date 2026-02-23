@@ -12,7 +12,7 @@ participant "Identity Provider" as IdP
 User -> Client : Edit profile form
 User -> Client : Save
 
-Client -> API : PUT /owners/me/profile
+Client -> API : PUT /customers/me/profile
 API -> UC : UpsertProfile(cmd)
 
 UC -> Owner : Load by subject

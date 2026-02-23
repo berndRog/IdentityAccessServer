@@ -18,7 +18,7 @@ Middleware -> Client : Auth cookie
 
 == First authenticated request ==
 
-Client -> API : GET /owners/me/profile
+Client -> API : GET /customers/me/profile
 API -> Owners : FindBySubject(sub)
 
 alt Owner exists

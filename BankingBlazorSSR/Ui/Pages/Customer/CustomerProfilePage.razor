@@ -1,9 +1,7 @@
-@page "/owners/profile"
+@page "/customers/profile"
+@using Microsoft.AspNetCore.Authorization
 @inherits BankingBlazorSsr.Ui.Common.BasePage
-
-@* @attribute [Authorize] *@
-@* @attribute [Authorize(Roles = "Owner")] *@
-
+@attribute [Authorize(Roles = "Customer")]
 
 <PageTitle>Kundenprofil</PageTitle>
 
@@ -34,14 +32,14 @@
                         <div class="col-md-6">
                             <InputFieldString Id="firstname"
                                               Label="Vorname"
-                                              @bind-Value="_ownerDto.Firstname"
+                                              @bind-Value="_customerDto.Firstname"
                                               Placeholder="dein Vorname ..."/>
                         </div>
                         <!-- Vorname: 50% width on desktop -->
                         <div class="col-md-6">
                             <InputFieldString Id="lastname"
                                               Label="Nachname"
-                                              @bind-Value="_ownerDto.Lastname"
+                                              @bind-Value="_customerDto.Lastname"
                                               Placeholder="dein Nachname ..."/>
                         </div>
                         <div class="col-12">
@@ -49,10 +47,7 @@
                                               Label="E-Mail" 
                                               Placeholder="E-Mail" 
                                               Type="email"
-                                              @bind-Value="_ownerDto.Email"/>
-                            @* <div class="form-text mt-0"> *@
-                            @*     Diese E-Mail stammt aus dem Login und kann angepasst werden. *@
-                            @* </div> *@
+                                              @bind-Value="_customerDto.EmailString"/>
                         </div>
                     </div>
                 </div>
@@ -67,28 +62,28 @@
                             <InputFieldString Id="street" 
                                               Label="Straße" 
                                               Placeholder="Straße"
-                                              @bind-Value="_ownerDto.Street"/>
+                                              @bind-Value="_customerDto.Street"/>
                         </div>
 
                         <div class="col-md-4">
                             <InputFieldString Id="zip" 
                                               Label="PLZ" 
                                               Placeholder="PLZ"
-                                              @bind-Value="_ownerDto.PostalCode"/>
+                                              @bind-Value="_customerDto.PostalCode"/>
                         </div>
 
                         <div class="col-md-8">
                             <InputFieldString Id="city" 
                                               Label="Ort" 
                                               Placeholder="Ort"
-                                              @bind-Value="_ownerDto.City"/>
+                                              @bind-Value="_customerDto.City"/>
                         </div>
 
                         <div class="col-md-6">
                             <InputFieldString Id="country"
                                               Label="Land" 
                                               Placeholder="Land"
-                                              @bind-Value="_ownerDto.Country"/>
+                                              @bind-Value="_customerDto.Country"/>
                         </div>
                     </div>
                     
@@ -102,7 +97,8 @@
                     <div class="d-flex justify-content-center mt-3">
                         <ButtonsCancelLeaveSubmit
                             OnSubmit="SaveAsync"
-                            OnCancel="Cancel" />
+                            OnCancel="Cancel"
+                            DisabledSubmit="@_saving" />
                     </div>
                 </div>
             </div>

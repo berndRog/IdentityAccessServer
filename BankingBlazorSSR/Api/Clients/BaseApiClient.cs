@@ -12,13 +12,12 @@ public abstract class BaseApiClient<TClient>(
    JsonSerializerOptions json,
    ILogger<TClient> logger
 ) where TClient : class {
-
    // to have access in derived clients without passing around in each method;
    // also allows derived clients to use _http for custom calls if needed.
    protected readonly HttpClient _http = factory.CreateClient("BankingApi");
    protected readonly JsonSerializerOptions _json = json;
    protected readonly ILogger<TClient> _logger = logger;
-   
+
    protected async Task<Result<T>> SendAsync<T>(
       Func<Task<HttpResponseMessage>> send,
       CancellationToken ct = default
@@ -58,12 +57,11 @@ public abstract class BaseApiClient<TClient>(
          // - If body is truly empty => true
          // - Else must be valid JSON bool
          if (typeof(T) == typeof(bool)) {
-            
             // Guard against null content (e.g. some APIs might return 204 with no body, or Content-Length: 0)
             var content = response.Content;
             if (content is null)
                return Result<T>.Success((T)(object)true);
-            
+
             // Fast path: declared empty
             if (response.Content.Headers?.ContentLength == 0)
                return Result<T>.Success((T)(object)true);

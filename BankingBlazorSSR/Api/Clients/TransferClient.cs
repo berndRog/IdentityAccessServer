@@ -9,7 +9,7 @@
 //    // Get Transfer by accountID
 //    public async Task<Result<IEnumerable<TransferDto>?>> GetByAccountId(
 //       Guid accountId
-//    ) => await GetAllAsync<TransferDto>($"accounts/{accountId}/transfers");
+//    ) => await GetAllAccountsAsync<TransferDto>($"accounts/{accountId}/transfers");
 //
 //    // Send Transfer 
 //    public async Task<Result<TransferDto?>> SendTransfer(TransferDto transferDto, Guid accountId) =>

@@ -1,17 +1,20 @@
-@*@page "/accounts/iban/{Iban}"
+@page "/accounts/iban/{IbanString}"
+@using Microsoft.AspNetCore.Authorization
+@inherits BankingBlazorSsr.Ui.Common.BasePage
+@attribute [Authorize(Roles = "Customer, Employee")]
 
 <div class="container mt-3">
-  @if (!string.IsNullOrEmpty(_errorMessage)) {
-    <div class="alert alert-danger">@_errorMessage</div>
+  @if (!string.IsNullOrEmpty(ErrorMessage)) {
+    <div class="alert alert-danger">@ErrorMessage</div>
   }
   
   <div class="row">
     <div class="col-12 mb-3 me-md-3">
-      <OwnerCard Owner="@_ownerDto"/>
+      <CustomerCard CustomerDto="@_customerDto"/>
     </div>
 
     <div class="col-12 mb-3">
-      <AccountCard Account="@_accountDto"/>
+      <AccountCard AccountDto="@_accountDto"/>
     </div>
 
     <!-- Buttons Row (wrapped in a column for proper alignment) -->
@@ -20,4 +23,4 @@
                   OnButton1="HandleTransfers" OnButton2="HandleTransactions"/>
     </div>
   </div>
-</div>*@
+</div>

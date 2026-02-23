@@ -5,7 +5,7 @@
     <div class="card-body">
       <h5 class="card-title">Kontoinhaber</h5>
 
-      @if (Owners?.Any() == true) {
+      @if (CustomerDtos?.Any() == true) {
         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
           <table class="table table-sm table-striped table-hover">
             <thead class="align-middle">
@@ -19,15 +19,15 @@
             </tr>
             </thead>
             <tbody>
-            @foreach (var owner in Owners) {
+            @foreach (var customerDto in CustomerDtos) {
               <tr class="align-middle p-0">
-                <td>@owner.Firstname</td>
-                <td>@owner.Lastname</td>
-                <td>@owner?.CompanyName</td>
-                <td>@owner.Email</td>
-                <td>@owner.Id</td>
+                <td>@customerDto.Firstname</td>
+                <td>@customerDto.Lastname</td>
+                <td>@customerDto?.CompanyName</td>
+                <td>@customerDto?.EmailString</td>
+                <td>@customerDto.Id</td>
                 <td>
-                  <button class="btn btn-primary btn-sm" @onclick="() => OnOpenOwner.InvokeAsync(owner.Id)">
+                  <button class="btn btn-primary btn-sm" @onclick="() => OnOpenCustomer.InvokeAsync(customerDto!.Id)">
                     Kontoinhaber öffnen
                   </button>
                 </td>
@@ -45,6 +45,6 @@
 </div>
 
 @code {
-  [Parameter] public List<OwnerDto>? Owners { get; set; }
-  [Parameter] public EventCallback<Guid> OnOpenOwner { get; set; }
+  [Parameter] public List<CustomerDto>? CustomerDtos { get; set; }
+  [Parameter] public EventCallback<Guid> OnOpenCustomer { get; set; }
 }

@@ -1,11 +1,14 @@
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BankingBlazorSsr.Api.Auth;
 using BankingBlazorSsr.Api.Clients;
 using BankingBlazorSsr.Api.Contracts;
+using BankingBlazorSsr.Core.Utils;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
@@ -14,7 +17,7 @@ namespace BankingBlazorSsr;
 public sealed class Program {
    public static void Main(string[] args) {
       var builder = WebApplication.CreateBuilder(args);
-      
+
       //--- Logging, HTTP Logging ----------------------------------------------
       ConfigureLoginng(builder, builder.Services);
 
@@ -23,7 +26,7 @@ public sealed class Program {
       ConfigureBlazorSSR(builder.Services, builder.Configuration);
       // OIDC Authentication (Cookie + OpenID Connect)
       ConfigureAuthN(builder.Services, builder.Configuration, builder.Environment);
-      // Authorization policies (OwnersOnly, EmployeesOnly)
+      // Authorization policies (CustomersOnly, EmployeesOnly)
       ConfigureAuthZ(builder.Services);
 
       // -----------------------------------------------------------------------
@@ -35,18 +38,18 @@ public sealed class Program {
       }
 
       // HTTP logging middleware (useful during development/troubleshooting)
-      // app.UseHttpLogging();
+      //app.UseHttpLogging();
 
       // Security middlewares
       app.UseHttpsRedirection();
-      
+
       // Serve static files (e.g., CSS, JS, images)
       app.UseStaticFiles();
 
       // Routing must be before auth middlewares and endpoint mapping
       // neede for /indentity/login and /identity/logout endpoints in IdentityController
       app.UseRouting();
-      
+
       // Authentication and Authorization middlewares
       app.UseAuthentication();
       app.UseAuthorization();
@@ -72,14 +75,14 @@ public sealed class Program {
    /// </summary>
    /// <param name="builder"></param>
    /// <param name="services"></param>
-   private static void ConfigureLoginng( 
-      WebApplicationBuilder builder, 
+   private static void ConfigureLoginng(
+      WebApplicationBuilder builder,
       IServiceCollection services
    ) {
       builder.Logging.ClearProviders();
       builder.Logging.AddConsole();
       builder.Logging.AddDebug();
-      
+
       services.AddHttpLogging(o => {
          o.LoggingFields =
             HttpLoggingFields.RequestMethod |
@@ -88,19 +91,36 @@ public sealed class Program {
             HttpLoggingFields.RequestHeaders |
             HttpLoggingFields.ResponseStatusCode |
             HttpLoggingFields.ResponseHeaders;
-      
+
          // Optional: bodies (DEV only). Be careful: can leak sensitive data.
          o.LoggingFields |=
             HttpLoggingFields.RequestBody |
             HttpLoggingFields.ResponseBody;
-      
-         // DEV only: logging Authorization header will print bearer tokens.
-         // NEVER enable this in production.
+
+         // Body limits (avoid huge logs)
+         o.RequestBodyLogLimit = 1024;
+         o.ResponseBodyLogLimit = 4096;
+
+         // Allow-list only non-sensitive headers you actually want.
+         o.ResponseHeaders.Clear();
+         o.ResponseHeaders.Add("Content-Type");
+         o.RequestHeaders.Add("Accept");
+
+         // Force redaction for common sensitive headers (even if someone adds them later).
          o.RequestHeaders.Add("Authorization");
+         //o.RequestHeaders.Add("Cookie");
+         o.RequestHeaders.Add("Origin");
+         o.RequestHeaders.Add("Referer");
+         o.RequestHeaders.Add("Set-Cookie");
+
          o.MediaTypeOptions.AddText("application/json");
+         o.MediaTypeOptions.AddText("application/json");
+         o.MediaTypeOptions.AddText("application/problem+json");
+         o.MediaTypeOptions.AddText("application/*+json");
+         o.MediaTypeOptions.AddText("text/plain");
       });
    }
-   
+
    /// <summary>
    /// Configure Blazor Server-Side Rendering (SSR) with interactive server components.
    /// </summary>
@@ -114,7 +134,7 @@ public sealed class Program {
       services
          .AddRazorComponents()
          .AddInteractiveServerComponents();
-      
+
       // Needed to access HttpContext (e.g., for token retrieval in handlers)
       services.AddHttpContextAccessor();
 
@@ -124,37 +144,43 @@ public sealed class Program {
       //--- MVC Controllers / Presentation  -------------------------------------
       // we implement /identity/login, /identity/logout as controller actions
       services.AddControllers();
-      
+
       //--- JSON options for API clients -----------------------------------------
       services.AddSingleton(new JsonSerializerOptions {
-         WriteIndented = true,  // pretty-print for easier debugging (optional)
+         WriteIndented = true, // pretty-print for easier debugging (optional)
          PropertyNameCaseInsensitive = true,
          ReadCommentHandling = JsonCommentHandling.Skip,
          AllowTrailingCommas = true,
          NumberHandling = JsonNumberHandling.AllowReadingFromString,
-         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-         Converters = { new JsonStringEnumConverter() }
+         //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+         Converters = {
+            new JsonStringEnumConverter(),
+            new UppercaseGuidConverter(),
+            new UppercaseNullableGuidConverter()
+         }
       });
-      
+
       //--- Typed HTTP client for the IA-Provider and Banking API / Communication ---
-      services.AddHttpClient("AuthServer", c => {
-         c.BaseAddress = new Uri(configuration["Auth:Authority"]!); // https://localhost:7010
+      services.AddHttpClient("AuthServer", client => {
+         client.BaseAddress = new Uri(configuration["Auth:Authority"]!); // https://localhost:7010
+         client.Timeout = TimeSpan.FromSeconds(300);
       });
-      
+
       // AccessTokenHandler attaches the access token to each request.
       services.AddTransient<AccessTokenHandler>();
 
-      services.AddHttpClient("BankingApi", client => { 
-         client.BaseAddress = new Uri(configuration["BankingApi:BaseUrl"]!);
-         client.Timeout = TimeSpan.FromSeconds(30);
-      })
-      .AddHttpMessageHandler<AccessTokenHandler>();
+      services.AddHttpClient("BankingApi", client => {
+            client.BaseAddress = new Uri(configuration["BankingApi:BaseUrl"]!);
+            client.Timeout = TimeSpan.FromSeconds(300);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+         })
+         .AddHttpMessageHandler<AccessTokenHandler>();
 
-      services.AddScoped<IOwnerClient,OwnerClient>();
-      services.AddScoped<IEmployeeClient,EmployeeClient>();
+      services.AddScoped<ICustomerClient, CustomerClient>();
+      services.AddScoped<IEmployeeClient, EmployeeClient>();
       services.AddScoped<IAccountClient, AccountClient>();
    }
-   
+
    /// <summary>
    /// Configure OpenID Connect authentication with cookies as local session store.
    /// </summary>
@@ -190,13 +216,13 @@ public sealed class Program {
             // Authorization Code Flow
             options.ResponseType = OpenIdConnectResponseType.Code;
             options.UsePkce = true;
-            
+
             // Callback endpoints in this SSR app
             options.CallbackPath = auth["CallbackPath"] ?? "/signin-oidc";
             options.SignedOutCallbackPath =
                auth["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
-            options.SignedOutRedirectUri = "/";   // 
-            
+            options.SignedOutRedirectUri = "/"; // 
+
             // Keep tokens in the auth session (cookie ticket)
             options.SaveTokens = true;
 
@@ -212,19 +238,42 @@ public sealed class Program {
 
             // Map name and roles to your claim types
             options.TokenValidationParameters = new TokenValidationParameters {
-               NameClaimType = "preferred_username", 
-               RoleClaimType = ClaimTypes.Role 
-//               RoleClaimType = "role"
+               NameClaimType = "preferred_username",
+               RoleClaimType = ClaimTypes.Role
             };
-            
+
             //options.RequireHttpsMetadata = true;
             options.RequireHttpsMetadata = !enviroment.IsDevelopment();
-            
+
             // Events for debugging
             options.Events = new OpenIdConnectEvents {
+               OnTokenValidated = context => {
+                  // Ensure role claims exist on the cookie principal (the one Blazor uses).
+                  var identity = context.Principal?.Identity as ClaimsIdentity;
+                  if (identity is null)
+                     return Task.CompletedTask;
+
+                  // If roles came in under another claim type, normalize them into ClaimTypes.Role.
+                  // (Safe even if already present.)
+                  var existingRoles = identity.FindAll(ClaimTypes.Role).Select(c => c.Value)
+                     .ToHashSet(StringComparer.Ordinal);
+                  foreach (var c in identity.Claims.Where(c => c.Type is "role" or "roles")) {
+                     if (!existingRoles.Contains(c.Value))
+                        identity.AddClaim(new Claim(ClaimTypes.Role, c.Value));
+                  }
+
+                  var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                  logger.LogInformation("User: {Name}; Roles: {Roles}",
+                     context.Principal?.FindFirst("preferred_username")?.Value ?? context.Principal?.Identity?.Name,
+                     string.Join(",", identity.FindAll(ClaimTypes.Role).Select(r => r.Value)));
+
+                  return Task.CompletedTask;
+               },
+
                OnRedirectToIdentityProvider = context => {
                   var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                  logger.LogInformation("Redirecting to identity provider: {Issuer}", context.ProtocolMessage.IssuerAddress);
+                  logger.LogInformation("Redirecting to identity provider: {Issuer}",
+                     context.ProtocolMessage.IssuerAddress);
                   return Task.CompletedTask;
                },
                OnRemoteFailure = context => {
@@ -248,9 +297,42 @@ public sealed class Program {
    /// </summary>
    private static void ConfigureAuthZ(IServiceCollection services) {
       services.AddAuthorization(options => {
-         options.AddPolicy("OwnersOnly", policy => policy.RequireRole("Owner"));
-         options.AddPolicy("EmployeesOnly", policy => policy.RequireRole("Employee"));
+         options.AddPolicy("CustomersOnly", policy =>
+            policy.RequireAssertion(ctx => {
+               var ok = ctx.User.IsInRole("Customer");
+               LogAuthZ(ctx, "CustomersOnly", ok);
+               return ok;
+            }));
+
+         options.AddPolicy("EmployeesOnly", policy =>
+            policy.RequireAssertion(ctx => {
+               var ok = ctx.User.IsInRole("Employee");
+               LogAuthZ(ctx, "EmployeesOnly", ok);
+               return ok;
+            }));
+
+         options.AddPolicy("CustomersOrEmployees", policy =>
+            policy.RequireAssertion(ctx => {
+               var ok = ctx.User.IsInRole("Customer") || ctx.User.IsInRole("Employee");
+               LogAuthZ(ctx, "CustomersOrEmployees", ok);
+               return ok;
+            }));
       });
+
+      static void LogAuthZ(AuthorizationHandlerContext ctx, string policyName, bool ok) {
+         var loggerFactory =
+            (ctx.Resource as HttpContext)?.RequestServices.GetService<ILoggerFactory>();
+
+         var roles = string.Join(",", ctx.User.FindAll(ClaimTypes.Role).Select(r => r.Value));
+         var name =
+            ctx.User.FindFirst("preferred_username")?.Value ??
+            ctx.User.Identity?.Name ??
+            "(unknown)";
+
+         loggerFactory?
+            .CreateLogger<Program>()
+            .LogInformation("AuthZ {Policy}: ok={Ok}; user={User}; roles={Roles}", policyName, ok, name, roles);
+      }
    }
 }
 
@@ -277,7 +359,7 @@ können z.B. über einen AccessTokenHandler ausgelesen werden.
 3) Claims vs Rollen vs Rechte
 -----------------------------
 - role (Claim) dient der technischen Autorisierung in ASP.NET (Policies/Roles).
-- account_type (Claim) ist fachlich/domänennah (Owner/Employee/Service).
+- account_type (Claim) ist fachlich/domänennah (CustomerDto/Employee/Service).
 - admin_rights (Claim) ist fein-granular (Bitmask für Employee-Berechtigungen).
 
 Merksatz:
@@ -286,7 +368,7 @@ Merksatz:
 4) Policies statt if-Spaghetti
 ------------------------------
 Policies kapseln Regeln zentral:
-- OwnersOnly / EmployeesOnly sind wiederverwendbar in Components/Endpoints.
+- CustomersOnly / EmployeesOnly sind wiederverwendbar in Components/Endpoints.
 Das hält UI und API sauber und testbar.
 
 5) HTTP Logging: mächtig, aber gefährlich

@@ -26,7 +26,7 @@ IdP -> Middleware : id_token + access_token
 Middleware -> Client : Auth cookie created
 
 User -> Client : GET /dispatcher
-Client -> API : GET /owners/me/profile (Bearer token)
+Client -> API : GET /customers/me/profile (Bearer token)
 API -> Client : 200 OK
 
 @enduml

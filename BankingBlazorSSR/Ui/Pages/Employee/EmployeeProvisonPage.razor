@@ -1,9 +1,9 @@
-@page "/owners/provision"
+@page "/employees/provision"
 @using Microsoft.AspNetCore.Authorization
 @inherits BankingBlazorSsr.Ui.Common.BasePage
-@attribute [Authorize(Policy = "OwnersOnly")]
+@attribute [Authorize(Roles = "Employee")]
 
-<h1>Owner Provison</h1>
+<h1>Mitarbeiter Provision</h1>
 
 @if (Loading)
 {

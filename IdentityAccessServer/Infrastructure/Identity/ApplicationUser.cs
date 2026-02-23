@@ -30,12 +30,11 @@ public sealed class ApplicationUser : IdentityUser {
    // Account classification
    // ------------------------------------------------------------------
    /// <summary>
-   /// "customer", "owner", or "employee".
+   /// "customer" or "employee".
    /// - customer: self-registered, normal access
-   /// - owner: self-registered, needs activation by employee (has Status field)
    /// - employee: managed account with AdminRights
    /// </summary>
-   public string AccountType { get; set; } = "owner";
+   public string AccountType { get; set; } = "customer";
    
    // ------------------------------------------------------------------
    // Administrative rights (bitmask)

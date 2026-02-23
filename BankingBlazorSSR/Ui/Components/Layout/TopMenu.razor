@@ -22,7 +22,7 @@
         <Authorized>
 
           <ul class="navbar-nav">
-            @if (auth.User.IsInRole("Owner"))
+            @if (auth.User.IsInRole("Customer"))
             {
               <li class="nav-item"><NavLink class="nav-link" href="/owner">Dashboard</NavLink></li>
               <li class="nav-item"><NavLink class="nav-link" href="/accounts">Konten</NavLink></li>
@@ -32,7 +32,7 @@
             @if (auth.User.IsInRole("Employee"))
             {
               <li class="nav-item"><NavLink class="nav-link" href="/admin">Admin</NavLink></li>
-              <li class="nav-item"><NavLink class="nav-link" href="/owners">Owners</NavLink></li>
+              <li class="nav-item"><NavLink class="nav-link" href="/customers">CustomerDtoDtos</NavLink></li>
             }
           </ul>
 

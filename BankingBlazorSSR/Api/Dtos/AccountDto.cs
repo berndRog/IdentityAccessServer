@@ -1,11 +1,13 @@
-﻿namespace BankingBlazorSsr.Api.Dtos;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
+namespace BankingBlazorSsr.Api.Dtos;
 
 /// <summary>
-/// Account (Bankkonto)
+/// AccountDto (Bankkonto)
 /// </summary>
-public record AccountDto(
+public sealed record AccountDto(
    Guid Id,
-   string Iban,
-   decimal Balance,
-   Guid OwnerId
+   string IbanString,
+   decimal BalanceDecimal,
+   Guid CustomerId
 );

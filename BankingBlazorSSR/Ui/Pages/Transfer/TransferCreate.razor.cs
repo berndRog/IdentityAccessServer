@@ -14,7 +14,7 @@
 //
 //    [Parameter] public required Guid AccountId { get; set; }
 //
-//    private OwnerDto? _ownerDto = null;
+//    private CustomerDto? _customerDto = null;
 //    private AccountDto? _accountDto = null;
 //    private List<AccountDto> _accountDtos = [];
 //    private List<BeneficiaryDto>? _beneficiaryDtos = null;
@@ -23,12 +23,12 @@
 //    
 //    protected override async Task OnInitializedAsync() {
 //
-//       //logger.LogInformation("OwnerDetail: OnInitializedAsync Id: {1}", Id);
+//       //logger.LogInformation("CustomerDetail: OnInitializedAsync Id: {1}", Id);
 //       if (!userStateHolder.IsAuthenticated) {
 //          _errorMessage = "Kontoinhaber ist nicht angemeldet!";
 //          return;
 //       }
-//       _ownerDto = userStateHolder.OwnerDto!;
+//       _customerDto = userStateHolder.CustomerDto!;
 //
 //       switch (await accountClient.GetById(AccountId)) {
 //          case ResultData<AccountDto?>.Success sucess:

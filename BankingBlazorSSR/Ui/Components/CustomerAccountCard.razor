@@ -8,7 +8,7 @@
       </div>
       <div>
         <label class="fw-normal">IBAN:</label>
-        <span class="ms-2">@Iban</span>
+        <span class="ms-2">@IbanString</span>
       </div>
     </div>
   </div>
@@ -17,5 +17,5 @@
 @code {
   [Parameter] public required string FirstName { get; set; }
   [Parameter] public required string LastName { get; set; }
-  [Parameter] public required string Iban { get; set; }
+  [Parameter] public required string IbanString { get; set; }
 }

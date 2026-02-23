@@ -10,7 +10,7 @@
           <tr>
             <th class="fw-normal">Vorname</th>
             <th class="fw-normal">Nachname</th>
-            <th class="fw-normal">Iban</th>
+            <th class="fw-normal">IbanStringString</th>
             <th class="fw-normal">Aktionen</th>
           </tr>
           </thead>
@@ -19,7 +19,7 @@
             <tr class="py-1">
               <td>@beneficiary.FirstName</td>
               <td>@beneficiary.LastName</td>
-              <td>@beneficiary.Iban</td>
+              <td>@beneficiary.IbanString</td>
               <td>
                 <button class="btn btn-primary btn-sm" @onclick="() => OnOpenButton.InvokeAsync(beneficiary.Id)">
                   @ButtonText

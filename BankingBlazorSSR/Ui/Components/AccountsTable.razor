@@ -4,7 +4,7 @@
   <div class="card-body">
     <h5 class="card-title">Konten</h5>
 
-    @if (Accounts?.Any() == true) {
+    @if (AccountDtos?.Any() == true) {
       <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
         <table class="table table-sm table-striped table-hover">
           <thead>
@@ -15,12 +15,12 @@
           </tr>
           </thead>
           <tbody>
-          @foreach (var account in Accounts) {
+          @foreach (var accountDto in AccountDtos) {
             <tr>
-              <td>@account.Iban</td>
-              <td>@account.Balance.ToString("C", CultureInfo.CurrentCulture)</td>
+              <td>@accountDto.IbanString</td>
+              <td>@accountDto.BalanceDecimal.ToString("C", CultureInfo.CurrentCulture)</td>
               <td>
-                <button class="btn btn-primary btn-sm" @onclick="() => OnOpenAccount.InvokeAsync(account.Id)">
+                <button class="btn btn-primary btn-sm" @onclick="() => OnOpenAccount.InvokeAsync(accountDto.Id)">
                   Konto öffnen
                 </button>
               </td>
@@ -37,6 +37,6 @@
 </div>
 
 @code {
-  [Parameter] public List<AccountDto>? Accounts { get; set; }
+  [Parameter] public List<AccountDto>? AccountDtos { get; set; }
   [Parameter] public EventCallback<Guid> OnOpenAccount { get; set; }
 }

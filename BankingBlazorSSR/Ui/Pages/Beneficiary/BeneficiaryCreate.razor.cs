@@ -5,7 +5,7 @@
 // namespace BankingBlazorSsr.Ui.Pages.Beneficiary;
 //
 // public partial class BeneficiaryCreate(
-//    IOwnerClient ownerClient,
+//    ICustomerClient ownerClient,
 //    IAccountClient accountClient,
 //    IBeneficiaryClient beneficiaryClient,
 //    NavigationManager navigationManager,
@@ -17,30 +17,30 @@
 //    private readonly BeneficiaryCreateModel _beneficiaryCreate = new();
 //    private string? _errorMessage = null;
 //
-//    private OwnerDto? _ownerDto = default!;
+//    private CustomerDto? _customerDto = default!;
 //    private AccountDto? _accountDto = null;
 //    private BeneficiaryDto? _beneficiaryDto = null;
 //    
 //    private async Task HandleSubmit() {
 //       
 //       logger.LogInformation("BeneficiaryCreate: HandleSubmit() {1} {2} {3}", 
-//          _beneficiaryCreate.Firstname, _beneficiaryCreate.Lastname, _beneficiaryCreate.Iban);
+//          _beneficiaryCreate.Firstname, _beneficiaryCreate.Lastname, _beneficiaryCreate.IbanString);
 //       
 //       switch (await ownerClient.GetByName($"{_beneficiaryCreate.Firstname} {_beneficiaryCreate.Lastname}")) {
-//          case ResultData<IEnumerable<OwnerDto?>>.Success success:
+//          case ResultData<IEnumerable<CustomerDto?>>.Success success:
 //             logger.LogInformation("BeneficiaryCreate: GetByName() success");
 //             if(success.Data!.Count() == 1) {
-//                _ownerDto = success.Data!.FirstOrDefault();               
+//                _customerDto = success.Data!.FirstOrDefault();               
 //             } 
 //             else if(success.Data!.Count() > 1) 
-//                _errorMessage = $"Es gibt mehr einen Owner {success.Data}";
+//                _errorMessage = $"Es gibt mehr einen CustomerDto {success.Data}";
 //             break;
-//          case ResultData<IEnumerable<OwnerDto>?>.Error error:
+//          case ResultData<IEnumerable<CustomerDto>?>.Error error:
 //             _errorMessage = error.Exception.Message;
 //             return;
 //       }
 //       
-//       switch (await accountClient.GetByIban(_beneficiaryCreate.Iban)) {
+//       switch (await accountClient.GetByIban(_beneficiaryCreate.IbanString)) {
 //          case ResultData<AccountDto?>.Success sucess:
 //             logger.LogInformation("BeneficiaryCreate: GetAccountByIban: {1}", sucess.Data);
 //             _accountDto = sucess.Data!;
@@ -53,7 +53,7 @@
 //          Id: Guid.NewGuid(),
 //          FirstName: _beneficiaryCreate.Firstname,
 //          LastName: _beneficiaryCreate.Lastname,
-//          Iban: _beneficiaryCreate.Iban,
+//          IbanString: _beneficiaryCreate.IbanString,
 //          AccountId: AccountId
 //       );
 //

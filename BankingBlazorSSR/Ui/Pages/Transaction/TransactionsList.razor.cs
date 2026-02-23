@@ -14,7 +14,7 @@
 //    
 //    [Parameter] public Guid AccountId { get; set; }
 //    
-//    private OwnerDto? _ownerDto = null;
+//    private CustomerDto? _customerDto = null;
 //    private AccountDto? _accountDto = null;
 //    private List<TransactionListItemDto> _transactionListItemDtos = new();
 //    private string? _errorMessage = null;
@@ -25,19 +25,19 @@
 //          _errorMessage = "Admin ist nicht angemeldet!";
 //          return;
 //       }
-//       if(userStateHolder.OwnerDto == null) {
+//       if(userStateHolder.CustomerDto == null) {
 //          _errorMessage = "Kontoinhaber ist nicht korrekt angemeldet!";
 //          return;
 //       }
-//       _ownerDto = userStateHolder.OwnerDto!;
+//       _customerDto = userStateHolder.CustomerDto!;
 //
 //       logger.LogInformation("TransactionsList: {1} {2} AccountId: {3}", 
-//          _ownerDto?.Firstname, _ownerDto?.Lastname, AccountId);
+//          _customerDto?.Firstname, _customerDto?.Lastname, AccountId);
 //       switch (await accountClient.GetById(AccountId)) {
 //          case ResultData<AccountDto?>.Success sucess:
 //             logger.LogInformation("TransactionList: GetAccountById: {1}", sucess.Data);
 //             _accountDto = sucess.Data!;
-//             if(_accountDto.OwnerId != _ownerDto?.Id) {
+//             if(_accountDto.CustomerId != _customerDto?.Id) {
 //                _errorMessage = "Kontozugriff fehlgeschlagen"; 
 //                return;
 //             }

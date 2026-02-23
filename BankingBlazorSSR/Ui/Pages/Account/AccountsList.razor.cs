@@ -1,40 +1,58 @@
-// using BankingBlazorSsr.Api;
-// using BankingBlazorSsr.Core;
-// using BankingBlazorSsr.Core.Dto;
-// using Microsoft.AspNetCore.Components;
-// namespace BankingBlazorSsr.Ui.Pages.Account;
-//
-// public partial class AccountsList(
-//    IAccountClient accountClient,
-//    UserStateHolder userStateHolder,
-//    NavigationManager navigationManager,
-//    ILogger<AccountsList> logger
-// ) : ComponentBase {
-//    private List<AccountDto> _accountDtos = [];
-//    private string? _errorMessage = null;
-//
-//    protected override async Task OnInitializedAsync() {
-//       if (!userStateHolder.IsAuthenticated) {
-//          _errorMessage = "Admin ist nicht angemeldet!";
-//          return;
-//       }
-//       var result = await accountClient.GetAll();
-//       if (result is null) {
-//          _errorMessage = "No response.";
-//          return;
-//       }
-//       if (result.IsSuccess) {
-//          logger.LogInformation("OwnerList: GetAll");
-//          _accountDtos = result.Value
-//             .OrderBy(a => a.Iban)
-//             .ToList();
-//          return;
-//       }
-//       _errorMessage = result.Error.Title;
-//    }
-//
-//    private void OpenAccount(Guid accountId) {
-//       logger.LogInformation("OwnerList: nav: /accounts/{1}", accountId);
-//       navigationManager.NavigateTo($"/accounts/{accountId}");
-//    }
-// }
+using BankingBlazorSsr.Api.Contracts;
+using BankingBlazorSsr.Api.Dtos;
+using BankingBlazorSsr.Ui.Common;
+using Microsoft.AspNetCore.Components;
+namespace BankingBlazorSsr.Ui.Pages.Account;
+
+public partial class AccountsList(
+   IAccountClient accountClient,
+   NavigationManager navigationManager,
+   ILogger<AccountsList> logger
+) : BasePage, IDisposable {
+   private readonly CancellationTokenSource _cts = new();
+
+   private List<AccountDto> _accountDtos = [];
+
+   public void Dispose() {
+      _cts.Cancel();
+      _cts.Dispose();
+   }
+
+   protected override async Task OnInitializedAsync() {
+      Loading = true;
+      ErrorMessage = null;
+
+      try {
+         var ct = _cts.Token;
+
+         var result = await accountClient.GetAllAccountsAsync(ct);
+         if (result.IsFailure) {
+            ErrorMessage = result.Error?.Title ?? "Request failed";
+            return;
+         }
+
+         logger.LogInformation("AccountsList: GetAll");
+
+         _accountDtos = result.Value!
+            .OrderBy(a => a.IbanString)
+            .ToList();
+      }
+      catch (OperationCanceledException) {
+         logger.LogDebug("AccountsList: request was cancelled");
+      }
+      catch (Exception ex) {
+         ErrorMessage = "Unexpected error while loading accounts.";
+         logger.LogError(ex, "AccountsList: unexpected error");
+      }
+      finally {
+         Loading = false;
+         ErrorMessage = null;
+         await InvokeAsync(StateHasChanged);
+      }
+   }
+
+   private void OpenAccount(Guid accountId) {
+      logger.LogInformation("AccountsList: nav: /accounts/{AccountId}", accountId);
+      navigationManager.NavigateTo($"/accounts/{accountId}");
+   }
+}

@@ -8,11 +8,11 @@ public sealed class EntryController(
 ) : Controller {
    [HttpGet("/entry")]
    public IActionResult Index() {
-      if (User.IsInRole("Owner"))
-         return Redirect("/owners/provision");
+      if (User.IsInRole("Customer"))
+         return Redirect("/customers/provision");
 
       if (User.IsInRole("Employee"))
-         return Redirect("/employee/provision");
+         return Redirect("/employees/provision");
 
       logger.LogWarning("Entry: user has no supported role.");
       return Redirect("/no-access");

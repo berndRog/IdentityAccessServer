@@ -2,19 +2,27 @@ using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-namespace BankingBlazorSsr.Ui.Pages.Owner;
+namespace BankingBlazorSsr.Ui.Pages.Customer;
 
 /// <summary>
-/// Owner profile edit page.
+/// CustomerDto profile edit page.
 /// Demonstrates form state handling, validation lifecycle,
 /// navigation semantics (Back vs Cancel), and API error handling.
 /// </summary>
-public partial class OwnerProfilePage {
+public partial class CustomerProfilePage : IDisposable {
 
    // ---- Dependency Injection ------------------------------------------------
-   [Inject] private IOwnerClient OwnerClient { get; set; } = default!;
+   [Inject] private ICustomerClient CustomerClient { get; set; } = default!;
    [Inject] private NavigationManager Navigation { get; set; } = default!;
-   [Inject] private ILogger<OwnerProfilePage> Logger { get; set; } = default!;
+   [Inject] private ILogger<CustomerProfilePage> Logger { get; set; } = default!;
+
+   private readonly CancellationTokenSource _cts = new();
+
+   public void Dispose() {
+      _cts.Cancel();
+      _cts.Dispose();
+   }
+
    // ---- Navigation Context --------------------------------------------------
    // Optional return URL (passed via query string)
    // After Save or Leave navigation returns here instead of fixed route
@@ -27,9 +35,9 @@ public partial class OwnerProfilePage {
    private string? _saveOk;
    // ---- Form Model ----------------------------------------------------------
    // Current editable model
-   private OwnerDto _ownerDto = new();
+   private CustomerDto _customerDto = new();
    // Snapshot of original state (used for Cancel)
-   private OwnerDto _originalOwnerDto = new();
+   private CustomerDto _originalCustomerDto = new();
    // Blazor form state manager
    private EditContext _editContext = default!;
 
@@ -44,24 +52,32 @@ public partial class OwnerProfilePage {
       // Create initial EditContext so form can render immediately
       RebuildEditContext();
 
-      // Load profile from API (Result pattern)
-      var result = await OwnerClient.GetProfileAsync();
-      if (result.IsFailure) {
-         HandleError(result.Error!);
-         Loading = false;
-         return;
+      try {
+         var ct = _cts.Token;
+
+         // Load profile from API (Result pattern)
+         var result = await CustomerClient.GetProfileAsync(ct);
+         if (result.IsFailure) {
+            HandleError(result.Error!);
+            return;
+         }
+
+         _customerDto = result.Value ?? new CustomerDto();
+
+         // Store snapshot for Cancel
+         _originalCustomerDto = Clone(_customerDto);
+
+         Logger.LogDebug("Loaded customer profile: {c}", _customerDto);
+
+         // Recreate EditContext because model instance changed
+         RebuildEditContext();
       }
-
-      _ownerDto = result.Value ?? new OwnerDto();
-
-      // Store snapshot for Cancel
-      _originalOwnerDto = Clone(_ownerDto);
-
-      Logger.LogDebug("Loaded owner profile: {@Profile}", _ownerDto);
-
-      // Recreate EditContext because model instance changed
-      RebuildEditContext();
-      Loading = false;
+      catch (OperationCanceledException) {
+         Logger.LogDebug("CustomerProfilePage: request was cancelled");
+      }
+      finally {
+         Loading = false;
+      }
    }
 
 
@@ -76,7 +92,7 @@ public partial class OwnerProfilePage {
       if (_editContext != null)
          _editContext.OnValidationStateChanged -= ValidationChanged;
 
-      _editContext = new EditContext(_ownerDto);
+      _editContext = new EditContext(_customerDto);
       _editContext.OnValidationStateChanged += ValidationChanged;
    }
 
@@ -92,17 +108,20 @@ public partial class OwnerProfilePage {
    /// No persistence operation.
    /// </summary>
    private void Cancel() {
-      _ownerDto = Clone(_originalOwnerDto);
+      _customerDto = Clone(_originalCustomerDto);
       RebuildEditContext();
       _saveError = null;
       _saveOk = null;
+      _showGlobalErrors = false;
+
+      StateHasChanged();
    }
 
    /// <summary>
    /// Leave = navigate away from page.
    /// Uses return URL if available.
    /// </summary>
-   private void GoBack() => Navigation.NavigateTo(ReturnUrl ?? "/owners");
+   private void GoBack() => Navigation.NavigateTo(ReturnUrl ?? "/customers");
 
 
    // -------------------------------------------------------------------------
@@ -115,8 +134,8 @@ public partial class OwnerProfilePage {
       _saving = true;
       _saveError = null;
       _saveOk = null;
-      
-      Logger.LogDebug("Save owner profile: {@Profile}", _ownerDto);
+
+      Logger.LogDebug("Save customer profile: {@Profile}", _customerDto);
 
       // Prevent API call if invalid
       if (!_editContext.Validate()) {
@@ -124,34 +143,55 @@ public partial class OwnerProfilePage {
          _saving = false;
          return;
       }
-      
-      var result = await OwnerClient.UpdateProfileAsync(_ownerDto);
-      if (result.IsFailure) {
-         var err = result.Error!;
-         Logger.LogWarning("Save failed {Status}: {Title}", err.Status, err.Title);
 
-         // Business validation errors stay on page
-         if (err.Status is 409 or 422) {
-            _saveError = err.Detail ?? err.Title;
-            _saving = false;
+      try {
+         var ct = _cts.Token;
+         var result = await CustomerClient.UpdateProfileAsync(_customerDto, ct);
+
+         if (result.IsFailure) {
+            var err = result.Error!;
+            Logger.LogWarning("Save failed {s}: {t}", err.Status, err.Title);
+
+            // Business validation errors stay on page
+            if (err.Status is 409 or 422) {
+               _saveError = err.Detail ?? err.Title;
+               return;
+            }
+
+            // Authentication / authorization / not found handled globally
+            HandleError(err);
             return;
          }
 
-         // Authentication / authorization / not found handled globally
-         HandleError(err);
-         _saving = false;
-         return;
+         // Success: API returned updated entity
+         _customerDto = result.Value ?? _customerDto;
+         RebuildEditContext();
+
+         _saveOk = "Saved.";
+
+         var id = _customerDto.Id;
+         if (id == Guid.Empty) {
+            // If the API doesn't return Id, stay on page and show a helpful error.
+            _saveError = "Saved, but server did not return an Id. Navigation to details is not possible.";
+            Logger.LogWarning("Save succeeded but CustomerDto.Id is empty.");
+            return;
+         }
+
+         var target = $"/customers/{id}";
+         Logger.LogInformation("CustomerProfilePage: navigate to {Target}", target);
+
+         // Let the UI render 'Saved.' before leaving (optional but helps debugging/UX)
+         await InvokeAsync(StateHasChanged);
+
+         // Navigate. If interactive routing is flaky (SSR + auth), force reload.
+         Navigation.NavigateTo(target, forceLoad: true);
       }
-
-      // Success: API returned updated entity
-      _ownerDto = result.Value ?? _ownerDto;
-      RebuildEditContext();
-
-      _saveOk = "Saved.";
-      _saving = false;
-
-      // After successful save navigate to detail view
-      Navigation.NavigateTo($"/owners/{_ownerDto.Id}");
+      catch (OperationCanceledException) {
+         Logger.LogDebug("CustomerProfilePage: save cancelled");
+      }
+      finally {
+         _saving = false;
+      }
    }
 
 
@@ -163,11 +203,11 @@ public partial class OwnerProfilePage {
    /// DTO cloning is acceptable because DTOs are data containers,
    /// not domain entities.
    /// </summary>
-   private static OwnerDto Clone(OwnerDto src) => new() {
+   private static CustomerDto Clone(CustomerDto src) => new() {
       Id = src.Id,
       Firstname = src.Firstname,
       Lastname = src.Lastname,
-      Email = src.Email,
+      EmailString = src.EmailString,
       Street = src.Street,
       PostalCode = src.PostalCode,
       City = src.City,

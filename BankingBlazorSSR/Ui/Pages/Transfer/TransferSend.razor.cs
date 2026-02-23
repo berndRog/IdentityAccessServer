@@ -15,7 +15,7 @@
 //    [Parameter] public required Guid AccountId { get; set; }
 //    [Parameter] public required Guid BeneficiaryId { get; set; }
 //
-//    private OwnerDto? _ownerDto = null;
+//    private CustomerDto? _customerDto = null;
 //    private AccountDto? _accountDto = null;
 //    private BeneficiaryDto? _beneficiaryDto = null;
 //    private TransferDto? _transferDto = null;
@@ -31,7 +31,7 @@
 //          return;
 //       }
 //       // the actual owner of the account
-//       _ownerDto = userStateHolder.OwnerDto!;
+//       _customerDto = userStateHolder.CustomerDto!;
 //       
 //       // get account and beneficiary from url
 //       switch (await accountClient.GetById(AccountId)) {
@@ -91,7 +91,7 @@
 //             
 //             _isTransferSuccessful = true;
 //             _warnMessage = $"Überweisung erfolgreich\n" +
-//                $"{_transferDto.Amount} € an {_beneficiaryDto.FirstName} {_beneficiaryDto.LastName} {_beneficiaryDto.Iban}";
+//                $"{_transferDto.Amount} € an {_beneficiaryDto.FirstName} {_beneficiaryDto.LastName} {_beneficiaryDto.IbanString}";
 //             break;
 //          case ResultData<TransferDto?>.Error error:
 //             _errorMessage = $"Problem mit der Überweisung\n{error.Exception.Message}";

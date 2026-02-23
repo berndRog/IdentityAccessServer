@@ -1,23 +1,26 @@
-@* @page "/accounts/{id:guid}" *@
-@* *@
-@* <div class="container mt-3"> *@
-@*   @if (!string.IsNullOrEmpty(_errorMessage)) { *@
-@*     <div class="alert alert-danger">@_errorMessage</div> *@
-@*   } *@
-@*    *@
-@*   <div class="row"> *@
-@*     <div class="col-12 mb-3 me-md-3"> *@
-@*       <OwnerCard Owner="@_ownerDto"/> *@
-@*     </div> *@
-@* *@
-@*     <div class="col-12 mb-3"> *@
-@*       <AccountCard Account="@_accountDto"/> *@
-@*     </div> *@
-@* *@
-@*     <div class="col-12 mb-3"> *@
-@*       <BeneficiariesTable Beneficiaries="_beneficiaryDtos" /> *@
-@*     </div> *@
-@* *@
-@* *@
-@*   </div> *@
-@* </div> *@
+@page "/accounts/{id:guid}"
+@using Microsoft.AspNetCore.Authorization
+@inherits BankingBlazorSsr.Ui.Common.BasePage
+@attribute [Authorize(Roles = "Customer, Employee")]
+
+<div class="container mt-3">
+  @if (!string.IsNullOrEmpty(ErrorMessage)) {
+    <div class="alert alert-danger">@ErrorMessage</div>
+  }
+
+  <div class="row">
+    <div class="col-12 mb-3 me-md-3">
+      <CustomerCard CustomerDto="@_customerDto"/>
+    </div>
+
+    <div class="col-12 mb-3">
+      <AccountCard AccountDto="@_accountDto"/>
+    </div>
+
+    <div class="col-12 mb-3">
+      <BeneficiariesTable Beneficiaries="_beneficiaryDtos" />
+    </div>
+
+
+  </div>
+</div>

@@ -1,0 +1,63 @@
+@using BankingBlazorSsr.Api.Dtos
+
+<div class="container-fluid mt-3">
+  <div class="card shadow-sm w-100">
+    <div class="card-body">
+      <h5 class="card-title">Mitarbeiter</h5>
+
+      @if (EmployeeDtos?.Any() == true) {
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-striped table-hover">
+            <thead class="align-middle">
+            <tr>
+              <th class="fw-normal">Vorname</th>
+              <th class="fw-normal">Nachname</th>
+              <th class="fw-normal">E-Mail</th>
+              <th class="fw-normal">Firma</th>
+              <th class="fw-normal">Personalnr.</th>
+              <th class="fw-normal">Aktiv</th>
+              <th class="fw-normal">AdminRights</th>
+              <th class="fw-normal"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var employeeDto in EmployeeDtos) {
+              <tr class="align-middle p-0">
+                <td>@employeeDto.Firstname</td>
+                <td>@employeeDto.Lastname</td>
+                <td>@employeeDto.EmailString</td>
+                <td>@employeeDto.CompanyName</td>
+                <td>@employeeDto.PersonnelNumber</td>
+                <td>@(employeeDto.IsActive ? "Ja" : "Nein")</td>
+                <td>@employeeDto.AdminRights</td>
+                <td>
+                  <button class="btn btn-primary btn-sm" @onclick="() => OnOpenEmployee.InvokeAsync(GetEmployeeId(employeeDto))">
+                    Mitarbeiter öffnen
+                  </button>
+                </td>
+              </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+      }
+      else {
+        <p>Keine Mitarbeiter verfügbar.</p>
+      }
+    </div>
+  </div>
+</div>
+
+@code {
+  [Parameter] public List<EmployeeDto>? EmployeeDtos { get; set; }
+  [Parameter] public EventCallback<Guid> OnOpenEmployee { get; set; }
+
+  // EmployeeDto currently has no Id property in the DTO.
+  // This helper exists so compilation stays explicit and we get a clear error at runtime.
+  // Once EmployeeDto has an Id, replace this with `employeeDto.Id`.
+  private static Guid GetEmployeeId(EmployeeDto employeeDto) {
+    // TODO: add Id to EmployeeDto and use it here.
+    return Guid.Empty;
+  }
+}
+

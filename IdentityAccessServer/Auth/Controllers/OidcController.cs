@@ -79,10 +79,24 @@ public sealed class OidcController(
 
       // --- Domain-specific ---------------------------------------------------
       // Role mapping for ASP.NET authorization:
-      // (- Customer: self-registered, normal access) wird nciht unterstütz
-      // - Owner: self-registered, but needs activation (Status check)
-      // - Employee: has AdminRights, can manage customers/owners
-      var role = user.AdminRights > 0 ? "Employee" : "Owner";
+      // We keep a canonical domain claim `account_type` (lowercase) and derive
+      // the ASP.NET role claim (TitleCase) from it.
+
+      var accountType = (user.AccountType ?? "customer").Trim().ToLowerInvariant();
+
+      // Backward-compatible fallback: if an account has AdminRights, treat it as employee.
+      if (user.AdminRights > 0)
+         accountType = "employee";
+
+      // Emit domain claim used by APIs.
+      SetOrReplaceClaim(identity, AuthClaims.AccountType, accountType);
+
+      // Emit role claim used by ASP.NET authorization / [Authorize(Roles=...)].
+      var role = accountType switch {
+         "employee" => "Employee",
+         "owner" => "Owner",
+         _ => "Customer"
+      };
       SetOrReplaceClaim(identity, AuthClaims.Role, role);
 
       // Keep the AdminRights bitmask (fine-grained permissions for employees)

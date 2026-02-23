@@ -12,41 +12,41 @@ public sealed class AccountClient(
    private const string Base = "bankingapi/v1";
 
    // -------------------------------------------------------------------------------------
-   // Account endpoints
+   // AccountDto endpoints
    // -------------------------------------------------------------------------------------
    // GET /accounts
-   public Task<Result<IEnumerable<AccountDto>>> GetAllAsync(CancellationToken ct) =>
+   public Task<Result<IEnumerable<AccountDto>>> GetAllAccountsAsync(CancellationToken ct) =>
       SendAsync<IEnumerable<AccountDto>>(
          () => _http.GetAsync($"{Base}/accounts", ct), ct);
 
-   // GET /owners/{ownerId}/accounts
-   public Task<Result<IEnumerable<AccountDto>>> GetAllByOwnerAsync(
-      Guid ownerId,
+   // GET /customers/{customerId}/accounts
+   public Task<Result<IEnumerable<AccountDto>>> GetAccountsByOwnerIdAsync(
+      Guid customerId,
       CancellationToken ct
    ) => SendAsync<IEnumerable<AccountDto>>(() => _http.GetAsync(
-      $"{Base}/owners/{ownerId}/accounts", ct), ct);
+      $"{Base}/customers/{customerId}/accounts", ct), ct);
 
    // GET /accounts/{accountId}
-   public Task<Result<AccountDto>> GetByIdAsync(
+   public Task<Result<AccountDto>> GetAccountByIdAsync(
       Guid accountId,
       CancellationToken ct
    ) => SendAsync<AccountDto>(() => _http.GetAsync(
       $"{Base}/accounts/{accountId}", ct), ct);
 
    // GET /accounts/iban/{iban}
-   public Task<Result<AccountDto>> GetByIbanAsync(
-      string iban,
+   public Task<Result<AccountDto>> GetAccountByIbanAsync(
+      string ibanString,
       CancellationToken ct
    ) => SendAsync<AccountDto>(() => _http.GetAsync(
-      $"{Base}/accounts/iban/{Uri.EscapeDataString(iban)}", ct), ct);
+      $"{Base}/accounts/iban/{Uri.EscapeDataString(ibanString)}", ct), ct);
 
-   // POST /owners/{ownerId}/accounts
-   public Task<Result<AccountDto>> PostAsync(
-      Guid ownerId,
+   // POST /customers/{customerId}/accounts
+   public Task<Result<AccountDto>> PostAccountAsync(
+      Guid customerId,
       AccountDto dto,
       CancellationToken ct
    ) => SendAsync<AccountDto>(() => _http.PostAsJsonAsync(
-      $"{Base}/owners/{ownerId}/accounts", dto, _json, ct), ct);
+      $"{Base}/customers/{customerId}/accounts", dto, _json, ct), ct);
 
    // // Example command without body (204) -> Result<bool>
    // public Task<Result<bool>> DeactivateAsync(Guid accountId, CancellationToken ct) =>
@@ -57,14 +57,14 @@ public sealed class AccountClient(
    // Beneficiaries endpoints
    // -------------------------------------------------------------------------------------
    // GET /accounts/{accountId}/beneficiaries
-   public Task<Result<IEnumerable<BeneficiaryDto>>> GetAllAsync(
+   public Task<Result<IEnumerable<BeneficiaryDto>>> GetBeneficiariesByAcountIdAsync(
       Guid accountId,
       CancellationToken ct
    ) => SendAsync<IEnumerable<BeneficiaryDto>>(() => _http.GetAsync(
       $"accounts/{accountId}/beneficiaries", ct), ct);
 
    // GET /accounts/{accountId}/beneficiaries/{beneficiaryId}
-   public Task<Result<BeneficiaryDto>> GetByIdAsync(
+   public Task<Result<BeneficiaryDto>> GetBeneficiaryByIdAsync(
       Guid accountId,
       Guid beneficiaryId,
       CancellationToken ct
@@ -72,7 +72,7 @@ public sealed class AccountClient(
       $"{Base}/accounts/{accountId}/beneficiaries/{beneficiaryId}", ct), ct);
 
    // POST /accounts/{accountId}/beneficiaries
-   public Task<Result<BeneficiaryDto>> PostAsync(
+   public Task<Result<BeneficiaryDto>> PostBeneficiaryAsync(
       Guid accountId,
       BeneficiaryDto dto,
       CancellationToken ct
@@ -81,7 +81,7 @@ public sealed class AccountClient(
 
    // DELETE /accounts/{accountId}/beneficiaries/{beneficiaryId}
    // API returns 204 NoContent -> Result<bool>
-   public Task<Result<bool>> DeleteAsync(
+   public Task<Result<bool>> DeletebenericiaryAsync(
       Guid accountId,
       Guid beneficiaryId,
       CancellationToken ct

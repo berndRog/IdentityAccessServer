@@ -2,24 +2,25 @@ namespace IdentityAccessServer.Data;
 
 [Flags]
 public enum AdminRights: int {
-   None = 0,                   // 0000 0000 0000 =    0
+   None = 0,                        // 0000 0000 0000 =    0
    // Reports
-   ViewReports = 1 << 0,       // 0000 0000 0001 =    1
-   // Cars (Fleetmanagement)
-   ViewCars   = 1 << 1,        // 0000 0000 0010 =    2
-   ManageCars = 1 << 2,        // 0000 0000 0100 =    4
+   ViewReports     = 1 << 0,        // 0000 0000 0001 =    1
+   
+   // Customers (Customer Management)
+   ViewCustomers   = 1 << 1,        // 0000 0000 0010 =    2
+   ManageCustomers = 1 << 2,        // 0000 0000 0100 =    4
   
-   // Bookings (Reservations, Rentals)
-   ViewBookings   = 1 << 3,    // 0000 0000 1000 =    8
-   ManageBookings = 1 << 4,    // 0000 0001 0000 =   16
+   // Accounts (Reservations, Rentals)
+   ViewsAccounts   = 1 << 3,        // 0000 0000 1000 =    8
+   ManageAccounts  = 1 << 4,        // 0000 0001 0000 =   16
   
-   // Customers
-   ViewCustomers   = 1 << 5,   // 0000 0010 0000 =   32
-   ManageCustomers = 1 << 6,   // 0000 0100 0000 =   64
+   // Employees (Employee Management)
+   ViewEmployees   = 1 << 5,        // 0000 0010 0000 =   32
+   ManageEmployees = 1 << 6,        // 0000 0100 0000 =   64
 
-   // Employees
-   ViewEmployees   = 1 << 7,   // 0000 1000 0000 =  128
-   ManageEmployees = 1 << 8    // 0001 0000 0000 =  256
+   // xxx
+   View   = 1 << 7,                 // 0000 1000 0000 =  128
+   Manage = 1 << 8                  // 0001 0000 0000 =  256
 }
 
 /* =====================================================================

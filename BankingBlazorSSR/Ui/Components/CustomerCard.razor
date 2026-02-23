@@ -4,16 +4,16 @@
     <h5 class="card-title">Kontoinhaber</h5>
     <div class="mb-2">
       <label class="fw-normal">Name:</label>
-      <span class="ms-2">@Owner.Firstname @Owner.Lastname</span>
+      <span class="ms-2">@CustomerDto.Firstname @CustomerDto.Lastname</span>
     </div>
     <div class="mb-2">
       <label class="fw-normal">E-Mail:</label>
-      <span class="ms-2">@Owner.Email</span>
+      <span class="ms-2">@CustomerDto.EmailString</span>
     </div>
   </div>
 </div>
 
 @code {
-  [Parameter] public required OwnerDto Owner { get; set; }
+  [Parameter] public required CustomerDto CustomerDto { get; set; }
 }
 

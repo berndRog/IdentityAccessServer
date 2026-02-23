@@ -1,0 +1,53 @@
+@using BankingBlazorSsr.Api.Dtos
+
+<div class="card shadow-sm w-100">
+  <div class="card-body">
+    <h5 class="card-title">Mitarbeiter</h5>
+
+    <div class="mb-2">
+      <label class="fw-normal">Name:</label>
+      <span class="ms-2">@EmployeeDto.Firstname @EmployeeDto.Lastname</span>
+    </div>
+
+    <div class="mb-2">
+      <label class="fw-normal">E-Mail:</label>
+      <span class="ms-2">@EmployeeDto.EmailString</span>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(EmployeeDto.PersonnelNumber)) {
+      <div class="mb-2">
+        <label class="fw-normal">Personalnummer:</label>
+        <span class="ms-2">@EmployeeDto.PersonnelNumber</span>
+      </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(EmployeeDto.CompanyName)) {
+      <div class="mb-2">
+        <label class="fw-normal">Firma:</label>
+        <span class="ms-2">@EmployeeDto.CompanyName</span>
+      </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(EmployeeDto.PhoneString)) {
+      <div class="mb-2">
+        <label class="fw-normal">Telefon:</label>
+        <span class="ms-2">@EmployeeDto.PhoneString</span>
+      </div>
+    }
+
+    <div class="mb-2">
+      <label class="fw-normal">Aktiv:</label>
+      <span class="ms-2">@(EmployeeDto.IsActive ? "Ja" : "Nein")</span>
+    </div>
+
+    <div class="mb-2">
+      <label class="fw-normal">AdminRights:</label>
+      <span class="ms-2">@EmployeeDto.AdminRights</span>
+    </div>
+  </div>
+</div>
+
+@code {
+  [Parameter] public required EmployeeDto EmployeeDto { get; set; }
+}
+

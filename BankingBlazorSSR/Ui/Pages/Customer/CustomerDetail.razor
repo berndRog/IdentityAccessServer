@@ -1,16 +1,20 @@
-@page "/accounts"
+@page "/customers/{Id:guid}"
 @using Microsoft.AspNetCore.Authorization
 @inherits BankingBlazorSsr.Ui.Common.BasePage
 @attribute [Authorize(Roles = "Customer, Employee")]
 
-<div class="container-fluid mt-3">
+<div class="container mt-3">
   @if (!string.IsNullOrEmpty(ErrorMessage)) {
     <div class="alert alert-danger">@ErrorMessage</div>
   }
-
   <div class="row">
-    <div class="col-12 mx-1">
-      <AccountsTable AccountDtos="@_accountDtos" OnOpenAccount="@((Guid accountId) => OpenAccount(accountId))" />
+    <div class="col-12 mb-1 me-md-1">
+      <CustomerCard CustomerDto="@_customerDto" />
     </div>
+
+    <div class="col-12 mb-1">
+      <AccountsTable AccountDtos="@_accountDtos" OnOpenAccount="OpenAccount" />
+    </div>
+
   </div>
 </div>

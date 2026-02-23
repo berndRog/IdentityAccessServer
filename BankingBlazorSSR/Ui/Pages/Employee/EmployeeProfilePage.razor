@@ -1,0 +1,91 @@
+@page "/employees/profile"
+@using Microsoft.AspNetCore.Authorization
+@inherits BankingBlazorSsr.Ui.Common.BasePage
+@attribute [Authorize(Roles = "Employee")]
+
+<PageTitle>Mitarbeiterprofil</PageTitle>
+
+<div class="container py-4" style="max-width: 860px;">
+    <div class="mb-3">
+        <h1 class="h3 mb-1">Profil Mitarbeiter</h1>
+    </div>
+
+    @if (Loading) {
+        <p>Lade …</p>
+    }
+    else {
+        <EditForm EditContext="_editContext" OnValidSubmit="SaveAsync" novalidate>
+            <DataAnnotationsValidator/>
+
+            @* Global validation *@
+            @if (_showGlobalErrors) {
+                <div class="alert alert-danger" role="alert">
+                    <div class="fw-semibold mb-1">Eingaben prüfen</div>
+                    <ValidationSummary/>
+                </div>
+            }
+
+            <!-- Basisdaten -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <InputFieldString Id="firstname"
+                                              Label="Vorname"
+                                              @bind-Value="_employeeDto.Firstname"
+                                              Placeholder="dein Vorname ..."/>
+                        </div>
+                        <div class="col-md-6">
+                            <InputFieldString Id="lastname"
+                                              Label="Nachname"
+                                              @bind-Value="_employeeDto.Lastname"
+                                              Placeholder="dein Nachname ..."/>
+                        </div>
+
+                        <div class="col-12">
+                            <InputFieldString Id="companyName" 
+                                              Label="Firma" 
+                                              Placeholder="Firma" 
+                                              @bind-Value="_employeeDto.CompanyName"/>
+                        </div>
+
+                        <div class="col-12">
+                            <InputFieldString Id="email" 
+                                              Label="E-Mail" 
+                                              Placeholder="E-Mail" 
+                                              Type="email"
+                                              @bind-Value="_employeeDto.EmailString"/>
+                        </div>
+                        <div class="col-12">
+                            <InputFieldString Id="phone" 
+                                              Label="Telefon" 
+                                              Placeholder="Telefon" 
+                                              Type="tel"
+                                              @bind-Value="_employeeDto.PhoneString"/>
+                        </div>
+                        <div class="col-12">
+                            <InputFieldString Id="personnelNumber" 
+                                              Label="Personalnummer" 
+                                              Placeholder="Personalnummer" 
+                                              @bind-Value="_employeeDto.PersonnelNumber"/>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_saveError)) {
+                        <div class="alert alert-danger mt-3" role="alert">@_saveError</div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_saveOk)) {
+                        <div class="alert alert-success mt-3" role="alert">@_saveOk</div>
+                    }
+
+                    <div class="d-flex justify-content-center mt-3">
+                        <ButtonsCancelLeaveSubmit
+                            OnSubmit="SaveAsync"
+                            OnCancel="Cancel"
+                            DisabledSubmit="@_saving" />
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    }
+</div>

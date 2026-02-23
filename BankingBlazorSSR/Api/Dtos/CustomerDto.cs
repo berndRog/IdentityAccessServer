@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+
 namespace BankingBlazorSsr.Api.Dtos;
 
-using System.ComponentModel.DataAnnotations;
+public sealed record CustomerDto {
 
-public sealed record OwnerDto {
-
-   [IgnoreDataMember]
+   // NOTE: Avoid [IgnoreDataMember] with System.Text.Json.
+   // It can cause members to be skipped during (de)serialization.
+   
    public Guid Id { get; set; } = Guid.Empty;
    
    [Required]
@@ -25,10 +26,9 @@ public sealed record OwnerDto {
    
    [Required]
    [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
-   [StringLength(254)] // RFC 5321 practical limit
-   public string Email { get; set; } = string.Empty;
-
-   [IgnoreDataMember]
+   [StringLength(254, MinimumLength = 5)] // RFC 5321 practical limit
+   public string EmailString { get; set; } = string.Empty;
+   
    public int Status { get; set; } // "Pending = 0 | Active = 1 | Rejected ? 2 | Deactivated = 3"
    
    [StringLength(200)]

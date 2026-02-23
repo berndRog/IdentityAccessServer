@@ -1,18 +1,17 @@
 @using System.Diagnostics.CodeAnalysis
-@using Microsoft.AspNetCore.Components.Forms
 
 @inherits InputBase<string>
 
 <div class="form-floating">
-    <input type="@Type" 
-           class="form-control @CssClass" 
-           id="@Id" 
-           placeholder="@Placeholder" 
-           value="@CurrentValueAsString" 
-           @oninput="OnInput"
+    <input type="@Type"
+           class="form-control @CssClass"
+           id="@Id"
+           placeholder="@Placeholder"
+           value="@CurrentValueAsString"
+           @oninput="@OnInput"
            @attributes="AdditionalAttributes" />
     <label for="@Id">@Label</label>
-    <ValidationMessage For="@(() => CurrentValue)" class="text-danger small"/>
+    <ValidationMessage For="@ValueExpression" class="text-danger small" />
 </div>
 
 @code {
@@ -21,17 +20,17 @@
   [Parameter] public string Placeholder { get; set; } = string.Empty;
   [Parameter] public string Type { get; set; } = "text";
 
+  private void OnInput(ChangeEventArgs e) {
+     CurrentValueAsString = e.Value?.ToString() ?? string.Empty;
+  }
+
   protected override bool TryParseValueFromString(
-    string? value, 
-    out string result, 
+    string? value,
+    out string result,
     [NotNullWhen(false)] out string? validationErrorMessage
   ) {
     result = value ?? string.Empty;
     validationErrorMessage = null;
     return true;
-  }
-  
-  private void OnInput(ChangeEventArgs e) {
-    CurrentValueAsString = e.Value?.ToString() ?? string.Empty;
   }
 }

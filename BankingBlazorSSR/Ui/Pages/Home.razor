@@ -18,7 +18,7 @@
     <Authorized>
       @{
         var user = auth.User;
-        var isOwner = user.IsInRole("Owner");
+        var isOwner = user.IsInRole("CustomerDto");
         var isEmployee = user.IsInRole("Employee");
         var displayName =
           user.FindFirst("preferred_username")?.Value
@@ -31,8 +31,8 @@
       <div class="d-flex gap-2 flex-wrap">
         @if (isOwner)
         {
-          <a class="btn btn-primary" href="/owners">Owner Bereich</a>
-          <a class="btn btn-outline-secondary" href="/owners/profile">Profil</a>
+          <a class="btn btn-primary" href="/customers">CustomerDto Bereich</a>
+          <a class="btn btn-outline-secondary" href="/customers/profile">Profil</a>
         }
 
         @if (isEmployee)
