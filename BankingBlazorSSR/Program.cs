@@ -38,7 +38,7 @@ public sealed class Program {
       }
 
       // HTTP logging middleware (useful during development/troubleshooting)
-      //app.UseHttpLogging();
+      app.UseHttpLogging();
 
       // Security middlewares
       app.UseHttpsRedirection();

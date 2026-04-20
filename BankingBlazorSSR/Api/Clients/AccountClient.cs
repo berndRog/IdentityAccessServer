@@ -9,7 +9,7 @@ public sealed class AccountClient(
    JsonSerializerOptions json,
    ILogger<AccountClient> logger
 ) : BaseApiClient<AccountClient>(factory, json, logger), IAccountClient {
-   private const string Base = "bankingapi/v1";
+   private const string Base = "banking/v2";
 
    // -------------------------------------------------------------------------------------
    // AccountDto endpoints

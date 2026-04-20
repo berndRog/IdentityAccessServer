@@ -10,7 +10,7 @@ public sealed class TransferClient(
    JsonSerializerOptions json,
    ILogger<TransferClient> logger
 ) : BaseApiClient<TransferClient>(factory, json, logger), ITransferClient {
-   private const string Base = "bankingapi/v1";
+   private const string Base = "banking/v2";
 
    // -------------------------------------------------------------------------------------
    // Transfers

@@ -9,7 +9,7 @@ public sealed class EmployeeClient(
    JsonSerializerOptions json,
    ILogger<EmployeeClient> logger
 ) : BaseApiClient<EmployeeClient>(factory, json, logger), IEmployeeClient {
-   private const string Base = "bankingapi/v1";
+   private const string Base = "banking/v2";
 
    // POST /employees/me/provision
    public Task<Result<ProvisionDto>> PostProvisionAsync(

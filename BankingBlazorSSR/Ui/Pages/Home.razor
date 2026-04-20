@@ -12,7 +12,7 @@
   <AuthorizeView Context="auth">
     <NotAuthorized>
       <p class="text-muted">
-        Sie sind angemeldet. Bitte oben im Menü auf
+        Sie sind nicht angemeldet. Bitte oben im Menü auf
         <a href="@LoginUrl" class="link-primary fw-semibold">Anmelden</a>
         klicken.
       </p>
@@ -21,7 +21,7 @@
     <Authorized>
       @{
         var user = auth.User;
-        var isOwner = user.IsInRole("CustomerDto");
+        var isCustomer = user.IsInRole("Customer");
         var isEmployee = user.IsInRole("Employee");
         var displayName =
           user.FindFirst("preferred_username")?.Value
@@ -32,9 +32,9 @@
       <p class="text-muted">Angemeldet als <b>@displayName</b></p>
 
       <div class="d-flex gap-2 flex-wrap">
-        @if (isOwner)
+        @if (isCustomer)
         {
-          <a class="btn btn-primary" href="/customers">CustomerDto Bereich</a>
+          <a class="btn btn-primary" href="/customers">Customer Bereich</a>
           <a class="btn btn-outline-secondary" href="/customers/profile">Profil</a>
         }
 
@@ -44,7 +44,7 @@
         }
       </div>
 
-      @if (!isOwner && !isEmployee)
+      @if (!isCustomer && !isEmployee)
       {
         <div class="alert alert-warning mt-3">
           Keine passende Rolle gefunden.

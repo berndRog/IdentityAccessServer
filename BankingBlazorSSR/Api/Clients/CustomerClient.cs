@@ -10,9 +10,9 @@ public sealed class CustomerClient(
    ILogger<CustomerClient> logger
 ) : BaseApiClient<CustomerClient>(factory, json, logger), ICustomerClient
 {
-   private const string Base = "bankingapi/v1";
+   private const string Base = "banking/v2";
 
-   // POST bankingapi/v1/customers/me/provision  -> 200 OK + OwnerProvisionDto
+   // POST banking/v2/customers/me/provision  -> 200 OK + OwnerProvisionDto
    public Task<Result<ProvisionDto>> PostProvisionAsync(CancellationToken ct = default) 
       => SendAsync<ProvisionDto>(
          () => _http.PostAsync($"{Base}/customers/me/provision", content: null, ct), ct);
