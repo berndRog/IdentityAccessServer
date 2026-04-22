@@ -10,7 +10,6 @@ namespace BankingBlazorSsr.Ui.Pages.Customer;
 public partial class CustomerProvisonPage : IDisposable {
 
    [Inject] private ICustomerClient CustomerClient { get; set; } = default!;
-   [Inject] private IAccountClient AccountClient { get; set; } = default!;
    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
@@ -58,20 +57,23 @@ public partial class CustomerProvisonPage : IDisposable {
          var authState = await AuthStateProvider.GetAuthenticationStateAsync();
          var user = authState.User;
 
-         Logger.LogInformation("User authenticated: {Auth}", user?.Identity?.IsAuthenticated == true);
+         Logger.LogInformation("User authenticated: {Auth}", user.Identity?.IsAuthenticated == true);
 
-         _idTokenClaims = user?.Identity?.IsAuthenticated == true
+         _idTokenClaims = user.Identity?.IsAuthenticated == true
             ? user.Claims.Select(c => (c.Type, c.Value)).ToList()
             : [];
 
          // 2) Provision
+         Logger.LogInformation("User PostPrivison");
          var resultProvision = await CustomerClient.PostProvisionAsync(ct);
          if (resultProvision.IsFailure) {
             HandleError(resultProvision.Error!);
             return;
          }
-
          _provision = resultProvision.Value!;
+         Logger.LogInformation("Customer provisioned {value}",_provision);
+
+         NavigationManager.NavigateTo("/customers/profile?onboarding=true", replace: true);
       }
       catch (OperationCanceledException) {
          Logger.LogDebug("CustomerProvisonPage: request was cancelled");
@@ -86,20 +88,6 @@ public partial class CustomerProvisonPage : IDisposable {
       }
    }
 
-   private async Task ContinueToProfileAsync() {
-      // is the profile just provisioned? if so, navigate to profile page
-      if (_provision?.WasCreated ?? false) {
-         Logger.LogInformation("Customer just provisioned");
-         NavigationManager.NavigateTo("/customers/profile");
-      }
-      else {
-         Logger.LogInformation("Customer already provisioned");
-         var id = _provision?.Id!;
-         NavigationManager.NavigateTo($"/customers/{id}");
-      }
-
-      await Task.CompletedTask;
-   }
 
    private static List<(string Key, string Value)> DecodeJwtToLines(string? jwt) {
       var result = new List<(string, string)>();

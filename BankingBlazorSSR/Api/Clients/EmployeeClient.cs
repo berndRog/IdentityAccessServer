@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Text.Json;
 using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
@@ -15,7 +16,7 @@ public sealed class EmployeeClient(
    public Task<Result<ProvisionDto>> PostProvisionAsync(
       CancellationToken ct
    ) => SendAsync<ProvisionDto>(
-      () => _http.PostAsync($"{Base}/employees/me/provision", content: null, ct), ct);
+      () => _http.PostAsJsonAsync($"{Base}/employees/me/provision", new { }, ct), ct);
 
    // GET /employees/me/profile
    public Task<Result<EmployeeDto>> GetProfileAsync(
@@ -29,6 +30,13 @@ public sealed class EmployeeClient(
       CancellationToken ct
    ) => SendAsync<EmployeeDto>(
       () => _http.PutAsJsonAsync($"{Base}/employees/me/profile", dto, ct), ct);
+
+   // POST /employees/{id}/activate
+   public Task<Result<bool>> PostActivateAsync(
+      Guid id,
+      CancellationToken ct = default
+   ) => SendAsync<bool>(
+      () => _http.PostAsJsonAsync($"{Base}/employees/{id}/activate", new { }, ct), ct);
 
    // GET /employees
    public Task<Result<IEnumerable<EmployeeDto>>> GetAllAsync(

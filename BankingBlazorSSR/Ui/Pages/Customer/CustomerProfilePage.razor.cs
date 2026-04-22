@@ -28,11 +28,14 @@ public partial class CustomerProfilePage : IDisposable {
    // After Save or Leave navigation returns here instead of fixed route
    [Parameter, SupplyParameterFromQuery]
    public string? ReturnUrl { get; set; }
+   [Parameter, SupplyParameterFromQuery]
+   public bool Onboarding { get; set; }
    // ---- UI State ------------------------------------------------------------
    private bool _saving;
    private bool _showGlobalErrors;
    private string? _saveError;
    private string? _saveOk;
+   private string? _activationInfo;
    // ---- Form Model ----------------------------------------------------------
    // Current editable model
    private CustomerDto _customerDto = new();
@@ -123,6 +126,7 @@ public partial class CustomerProfilePage : IDisposable {
       RebuildEditContext();
       _saveError = null;
       _saveOk = null;
+      _activationInfo = null;
       _showGlobalErrors = false;
 
       StateHasChanged();
@@ -145,6 +149,7 @@ public partial class CustomerProfilePage : IDisposable {
       _saving = true;
       _saveError = null;
       _saveOk = null;
+      _activationInfo = null;
 
       // Normalize required fields
       _customerDto.EmailString = _customerDto.EmailString?.Trim() ?? string.Empty;
@@ -190,9 +195,19 @@ public partial class CustomerProfilePage : IDisposable {
 
          // Success: API returned updated entity
          _customerDto = result.Value ?? _customerDto;
+          _originalCustomerDto = Clone(_customerDto);
          RebuildEditContext();
 
-         _saveOk = "Saved.";
+          _saveOk = Onboarding
+             ? "Profil gespeichert."
+             : "Saved.";
+
+          if (Onboarding) {
+             _activationInfo = "Dein Self-Service ist abgeschlossen. Die fachliche Aktivierung des Kontos erfolgt anschließend durch einen Employee.";
+             Logger.LogInformation("CustomerProfilePage: onboarding completed, staying on profile page.");
+             await InvokeAsync(StateHasChanged);
+             return;
+          }
 
          var id = _customerDto.Id;
          if (id == Guid.Empty) {

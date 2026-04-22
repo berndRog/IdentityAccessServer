@@ -246,7 +246,6 @@ public static class Program {
             // Token lifetimes
             options
                .SetAccessTokenLifetime(TimeSpan.FromMinutes(30));
-            options.SetAccessTokenLifetime(TimeSpan.FromMinutes(5));
             
 
             // Scopes (standard + configured API scopes)

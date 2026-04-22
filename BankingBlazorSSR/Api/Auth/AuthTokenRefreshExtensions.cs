@@ -31,19 +31,19 @@ public static class AuthTokenRefreshExtensions {
       // var clientId = config["Auth:ClientId"]!;
       // var clientSecret = config["Auth:ClientSecret"]!;
 
-      var tokenEndpointRaw = config["Auth:TokenEndpoint"];
+      var tokenEndpointRaw = config["AuthServer:TokenEndpoint"];
       if (string.IsNullOrWhiteSpace(tokenEndpointRaw))
-         throw new InvalidOperationException("Missing configuration: Auth:TokenEndpoint");
+         throw new InvalidOperationException("Missing configuration: AuthServer:TokenEndpoint");
       if (!Uri.TryCreate(tokenEndpointRaw, UriKind.Absolute, out var tokenEndpoint))
          return false; // silent fail
       
-      var clientId = config["Auth:ClientId"];
+      var clientId = config["AuthServer:ClientId"];
       if (string.IsNullOrWhiteSpace(clientId))
-         throw new InvalidOperationException("Missing configuration: Auth:ClientId");
+         throw new InvalidOperationException("Missing configuration: AuthServer:ClientId");
 
-      var clientSecret = config["Auth:ClientSecret"];
+      var clientSecret = config["AuthServer:ClientSecret"];
       if (string.IsNullOrWhiteSpace(clientSecret))
-         throw new InvalidOperationException("Missing configuration: Auth:ClientSecret");
+         throw new InvalidOperationException("Missing configuration: AuthServer:ClientSecret");
       
       var http = httpClientFactory.CreateClient("AuthServer");
 

@@ -1,9 +1,8 @@
 using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
-using BankingBlazorSsr.Ui.Common;
+using BankingBlazorSsr.Ui.Pages.Common;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.Logging;
 
 namespace BankingBlazorSsr.Ui.Pages.Employee;
 
@@ -31,12 +30,17 @@ public partial class EmployeeProfilePage : IDisposable {
    // After Save or Leave navigation returns here instead of fixed route
    [Parameter, SupplyParameterFromQuery]
    public string? ReturnUrl { get; set; }
+   [Parameter, SupplyParameterFromQuery]
+   public bool Onboarding { get; set; }
 
    // ---- UI State ------------------------------------------------------------
+   private bool _activating;
    private bool _saving;
    private bool _showGlobalErrors;
+   private bool _onboardingCompleted;
    private string? _saveError;
    private string? _saveOk;
+   private string? _activationInfo;
 
    // ---- Form Model ----------------------------------------------------------
    private EmployeeDto _employeeDto = new();
@@ -110,8 +114,10 @@ public partial class EmployeeProfilePage : IDisposable {
    private void Cancel() {
       _employeeDto = Clone(_originalEmployeeDto);
       RebuildEditContext();
+      _onboardingCompleted = false;
       _saveError = null;
       _saveOk = null;
+      _activationInfo = null;
       _showGlobalErrors = false;
 
       StateHasChanged();
@@ -119,13 +125,25 @@ public partial class EmployeeProfilePage : IDisposable {
 
    private void GoBack() => Navigation.NavigateTo(ReturnUrl ?? "/employees");
 
+   private void FinishOnboarding() {
+      var target = _employeeDto.IsActive ? "/employee" : "/";
+      Navigation.NavigateTo(target, forceLoad: true);
+   }
+
+   private bool CanSelfActivate
+      => _onboardingCompleted
+         && !_employeeDto.IsActive
+         && AdminRightsHelper.HasManageEmployeesRight(_employeeDto.AdminRights);
+
    // -------------------------------------------------------------------------
    // Save operation
    // -------------------------------------------------------------------------
    private async Task SaveAsync() {
       _saving = true;
+      _onboardingCompleted = false;
       _saveError = null;
       _saveOk = null;
+      _activationInfo = null;
 
       // Normalize required fields
       _employeeDto.EmailString = _employeeDto.EmailString?.Trim() ?? string.Empty;
@@ -161,10 +179,22 @@ public partial class EmployeeProfilePage : IDisposable {
             return;
          }
 
-         _employeeDto = result.Value ?? _employeeDto;
+          _employeeDto = result.Value ?? _employeeDto;
+          _originalEmployeeDto = Clone(_employeeDto);
          RebuildEditContext();
 
-         _saveOk = "Saved.";
+          _saveOk = Onboarding
+             ? "Profil gespeichert."
+             : "Saved.";
+
+          if (Onboarding) {
+             _onboardingCompleted = true;
+             _activationInfo = BuildActivationInfo(_employeeDto);
+             Logger.LogInformation("EmployeeProfilePage: onboarding completed, active={IsActive}, rights={AdminRights}",
+                _employeeDto.IsActive, _employeeDto.AdminRights);
+             await InvokeAsync(StateHasChanged);
+             return;
+          }
 
          var id = _employeeDto.Id;
          if (id == Guid.Empty) {
@@ -187,6 +217,44 @@ public partial class EmployeeProfilePage : IDisposable {
       }
    }
 
+   private async Task ActivateAsync() {
+      if (_employeeDto.Id == Guid.Empty) {
+         _saveError = "Aktivierung nicht möglich, weil keine Mitarbeiter-Id vorhanden ist.";
+         return;
+      }
+
+      _activating = true;
+      _saveError = null;
+      _saveOk = null;
+
+      try {
+         var ct = _cts.Token;
+         var result = await EmployeeClient.PostActivateAsync(_employeeDto.Id, ct);
+
+         if (result.IsFailure) {
+            var err = result.Error!;
+            if (err.Status is 409 or 422 or 403)
+               _saveError = err.Detail ?? err.Title;
+            else
+               HandleError(err);
+
+            return;
+         }
+
+         _employeeDto.IsActive = true;
+         _originalEmployeeDto = Clone(_employeeDto);
+         _saveOk = "Mitarbeiter aktiviert.";
+         _activationInfo = BuildActivationInfo(_employeeDto);
+         await InvokeAsync(StateHasChanged);
+      }
+      catch (OperationCanceledException) {
+         Logger.LogDebug("EmployeeProfilePage: activation cancelled");
+      }
+      finally {
+         _activating = false;
+      }
+   }
+
    // -------------------------------------------------------------------------
    // Helper
    // -------------------------------------------------------------------------
@@ -200,4 +268,13 @@ public partial class EmployeeProfilePage : IDisposable {
       IsActive = src.IsActive,
       AdminRights = src.AdminRights
    };
+
+   private static string BuildActivationInfo(EmployeeDto employee) {
+      if (employee.IsActive)
+         return "Der Mitarbeiter ist aktiviert. Das Onboarding ist abgeschlossen und der Mitarbeiterbereich kann jetzt genutzt werden.";
+
+      return AdminRightsHelper.HasManageEmployeesRight(employee.AdminRights)
+         ? "Das Profil ist gespeichert. Dieser Mitarbeiter verfügt über Mitarbeiterverwaltungsrechte. Die fachliche Aktivierung muss jetzt noch durchgeführt werden, bevor der Mitarbeiterbereich nutzbar ist."
+         : "Das Profil ist gespeichert. Die Aktivierung muss nun durch einen anderen berechtigten Mitarbeiter mit Mitarbeiterverwaltungsrechten vorgenommen werden.";
+   }
 }

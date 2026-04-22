@@ -27,20 +27,19 @@
           user.FindFirst("preferred_username")?.Value
           ?? user.Identity?.Name
           ?? "(unknown)";
-      }
+        }
 
       <p class="text-muted">Angemeldet als <b>@displayName</b></p>
 
       <div class="d-flex gap-2 flex-wrap">
         @if (isCustomer)
         {
-          <a class="btn btn-primary" href="/customers">Customer Bereich</a>
-          <a class="btn btn-outline-secondary" href="/customers/profile">Profil</a>
+          <a class="btn btn-primary" href="/entry">Customer Bereich</a>
         }
 
         @if (isEmployee)
         {
-          <a class="btn btn-primary" href="/employee">Employee Bereich</a>
+          <a class="btn btn-primary" href="/entry">Employee Bereich</a>
         }
       </div>
 

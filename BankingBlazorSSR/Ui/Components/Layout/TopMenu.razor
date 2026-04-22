@@ -24,14 +24,14 @@
           <ul class="navbar-nav">
             @if (auth.User.IsInRole("Customer"))
             {
-              <li class="nav-item"><NavLink class="nav-link" href="/customer">Dashboard</NavLink></li>
+              <li class="nav-item"><NavLink class="nav-link" href="/entry">Dashboard</NavLink></li>
               <li class="nav-item"><NavLink class="nav-link" href='@WithReturnUrl("/accounts")'>Konten</NavLink></li>
               <li class="nav-item"><NavLink class="nav-link" href='@WithReturnUrl("/transfers")'>Überweisungen</NavLink></li>
             }
 
             @if (auth.User.IsInRole("Employee"))
             {
-              <li class="nav-item"><NavLink class="nav-link" href="/employee">Dashboard</NavLink></li>
+              <li class="nav-item"><NavLink class="nav-link" href="/entry">Dashboard</NavLink></li>
               <li class="nav-item"><NavLink class="nav-link" href='@WithReturnUrl("/customers")'>Kunden</NavLink></li>
               <li class="nav-item"><NavLink class="nav-link" href='@WithReturnUrl("/accounts")'>Konten</NavLink></li>
 

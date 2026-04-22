@@ -10,6 +10,13 @@
         <h1 class="h3 mb-1">Profil Kontoinhaber</h1>
     </div>
 
+    @if (Onboarding) {
+        <div class="alert alert-info" role="alert">
+            Bitte vervollständige jetzt dein Profil. Danach ist der Self-Service abgeschlossen.
+            Die Aktivierung deines Kontos wird anschließend durch einen Employee vorgenommen.
+        </div>
+    }
+
     @if (Loading) {
         <p>Lade …</p>
     }
@@ -100,6 +107,9 @@
                     }
                     @if (!string.IsNullOrWhiteSpace(_saveOk)) {
                         <div class="alert alert-success" role="alert">@_saveOk</div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_activationInfo)) {
+                        <div class="alert alert-info" role="alert">@_activationInfo</div>
                     }
 
                     <div class="d-flex justify-content-center mt-3">

@@ -162,7 +162,7 @@ public sealed class Program {
 
       //--- Typed HTTP client for the IA-Provider and Banking API / Communication ---
       services.AddHttpClient("AuthServer", client => {
-         client.BaseAddress = new Uri(configuration["Auth:Authority"]!); // https://localhost:7010
+         client.BaseAddress = new Uri(configuration["AuthServer:Authority"]!); // https://localhost:7010
          client.Timeout = TimeSpan.FromSeconds(300);
       });
 

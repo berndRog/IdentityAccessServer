@@ -1,14 +1,16 @@
 using BankingBlazorSsr.Api.Contracts;
 using BankingBlazorSsr.Api.Dtos;
 using BankingBlazorSsr.Ui.Common;
+using BankingBlazorSsr.Ui.Pages.Common;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace BankingBlazorSsr.Ui.Pages.Employee;
 
 public partial class EmployeeDetail : IDisposable {
 
    [Inject] private IEmployeeClient EmployeeClient { get; set; } = default!;
+   [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
    [Inject] private ILogger<EmployeeDetail> Logger { get; set; } = default!;
 
@@ -16,6 +18,9 @@ public partial class EmployeeDetail : IDisposable {
 
    private readonly CancellationTokenSource _cts = new();
 
+   private bool _activating;
+   private bool _canActivateEmployee;
+   private string? _activateMessage;
    private EmployeeDto _employeeDto = new();
 
    public void Dispose() {
@@ -31,6 +36,10 @@ public partial class EmployeeDetail : IDisposable {
 
       try {
          var ct = _cts.Token;
+
+         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+         var currentUserRights = AdminRightsHelper.GetAdminRights(authState.User);
+         _canActivateEmployee = AdminRightsHelper.HasManageEmployeesRight(currentUserRights);
 
          var resultEmployee = await EmployeeClient.GetByIdAsync(Id, ct);
          if (resultEmployee.IsFailure) {
@@ -56,6 +65,42 @@ public partial class EmployeeDetail : IDisposable {
 
    private void LeaveForm() {
       NavigationManager.NavigateTo("/home");
+   }
+
+   private async Task ActivateAsync() {
+      if (_employeeDto.Id == Guid.Empty) {
+         ErrorMessage = "Aktivierung nicht möglich, weil keine Mitarbeiter-Id vorhanden ist.";
+         return;
+      }
+
+      _activating = true;
+      ErrorMessage = null;
+      _activateMessage = null;
+
+      try {
+         var ct = _cts.Token;
+         var result = await EmployeeClient.PostActivateAsync(_employeeDto.Id, ct);
+
+         if (result.IsFailure) {
+            var err = result.Error!;
+            if (err.Status is 403 or 409 or 422)
+               ErrorMessage = err.Detail ?? err.Title;
+            else
+               HandleError(err);
+
+            return;
+         }
+
+         _employeeDto.IsActive = true;
+         _activateMessage = "Mitarbeiter wurde aktiviert.";
+         await InvokeAsync(StateHasChanged);
+      }
+      catch (OperationCanceledException) {
+         Logger.LogDebug("EmployeeDetail: activation cancelled");
+      }
+      finally {
+         _activating = false;
+      }
    }
 }
 

@@ -15,6 +15,12 @@ public interface IEmployeeClient {
       CancellationToken ct = default
    );
 
+   // POST /employees/{id}/activate
+   Task<Result<bool>> PostActivateAsync(
+      Guid id,
+      CancellationToken ct = default
+   );
+
    // GET /employees
    Task<Result<IEnumerable<EmployeeDto>>> GetAllAsync(
       CancellationToken ct = default
@@ -22,7 +28,7 @@ public interface IEmployeeClient {
 
    // GET /employees/{Id}
    Task<Result<EmployeeDto>> GetByIdAsync(
-      Guid Id,
+      Guid id,
       CancellationToken ct = default
    );
 

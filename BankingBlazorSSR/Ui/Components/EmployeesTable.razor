@@ -51,12 +51,6 @@
   [Parameter] public List<EmployeeDto>? EmployeeDtos { get; set; }
   [Parameter] public EventCallback<Guid> OnOpenEmployee { get; set; }
 
-  // EmployeeDto currently has no Id property in the DTO.
-  // This helper exists so compilation stays explicit and we get a clear error at runtime.
-  // Once EmployeeDto has an Id, replace this with `employeeDto.Id`.
-  private static Guid GetEmployeeId(EmployeeDto employeeDto) {
-    // TODO: add Id to EmployeeDto and use it here.
-    return Guid.Empty;
-  }
+  private static Guid GetEmployeeId(EmployeeDto employeeDto) => employeeDto.Id;
 }
 

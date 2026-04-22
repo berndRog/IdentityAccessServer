@@ -9,11 +9,25 @@
   @if (!string.IsNullOrEmpty(ErrorMessage)) {
     <div class="alert alert-danger">@ErrorMessage</div>
   }
+  @if (!string.IsNullOrWhiteSpace(_activateMessage)) {
+    <div class="alert alert-success">@_activateMessage</div>
+  }
 
   <div class="row">
     <div class="col-12 mb-1 me-md-1">
       <EmployeeCard EmployeeDto="@_employeeDto" />
     </div>
+  </div>
+
+  <div class="d-flex justify-content-center gap-2 flex-wrap mt-3">
+    @if (!_employeeDto.IsActive && _canActivateEmployee) {
+      <button type="button"
+              class="btn btn-primary action-btn"
+              @onclick="ActivateAsync"
+              disabled="@_activating">
+        Mitarbeiter aktivieren
+      </button>
+    }
   </div>
 </div>
 

@@ -10,6 +10,13 @@
         <h1 class="h3 mb-1">Profil Mitarbeiter</h1>
     </div>
 
+    @if (Onboarding) {
+        <div class="alert alert-info" role="alert">
+            Bitte vervollständige jetzt das Mitarbeiterprofil. Danach ist das Onboarding abgeschlossen.
+            Die fachliche Aktivierung erfolgt entweder direkt mit ausreichenden Rechten oder durch einen anderen berechtigten Mitarbeiter.
+        </div>
+    }
+
     @if (Loading) {
         <p>Lade …</p>
     }
@@ -70,12 +77,48 @@
                     @if (!string.IsNullOrWhiteSpace(_saveOk)) {
                         <div class="alert alert-success mt-3" role="alert">@_saveOk</div>
                     }
+                    @if (!string.IsNullOrWhiteSpace(_activationInfo)) {
+                        <div class="alert alert-info mt-3" role="alert">@_activationInfo</div>
+                    }
 
-                    <div class="d-flex justify-content-center mt-3">
-                        <ButtonsCancelLeaveSubmit
-                            OnSubmit="SaveAsync"
-                            OnCancel="Cancel"
-                            DisabledSubmit="@_saving" />
+                    <div class="d-flex justify-content-center mt-3 gap-2 flex-wrap">
+                        @if (Onboarding) {
+                            @if (_onboardingCompleted) {
+                                @if (CanSelfActivate) {
+                                    <button type="button"
+                                            class="btn btn-primary action-btn"
+                                            @onclick="ActivateAsync"
+                                            disabled="@_activating">
+                                        Mitarbeiter aktivieren
+                                    </button>
+                                }
+
+                                <button type="button"
+                                        class="btn btn-outline-primary action-btn"
+                                        @onclick="FinishOnboarding">
+                                    @(_employeeDto.IsActive ? "Zum Mitarbeiterbereich" : "Fertig")
+                                </button>
+                            }
+                            else {
+                                <button type="button"
+                                        class="btn btn-neutral action-btn"
+                                        @onclick="Cancel">
+                                    Eingaben zurücksetzen
+                                </button>
+
+                                <button type="submit"
+                                        class="btn btn-primary action-btn"
+                                        disabled="@_saving">
+                                    Profil speichern
+                                </button>
+                            }
+                        }
+                        else {
+                            <ButtonsCancelLeaveSubmit
+                                OnSubmit="SaveAsync"
+                                OnCancel="Cancel"
+                                DisabledSubmit="@_saving" />
+                        }
                     </div>
                 </div>
             </div>
