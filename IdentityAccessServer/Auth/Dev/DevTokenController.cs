@@ -1,108 +1,44 @@
-using System.Security.Claims;
-using IdentityAccessServer.Auth.Claims;
-using IdentityAccessServer.Auth.Options;
-using IdentityAccessServer.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using OpenIddict.Abstractions;
-using OpenIddict.Server.AspNetCore;
+using IdentityAccessServer.Auth.Options;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
-namespace IdentityAccessServer.Auth.Controllers;
+namespace IdentityAccessServer.Auth.Dev;
 
 [ApiController]
 [Route("dev")]
 public sealed class DevTokenController(
-   IWebHostEnvironment env,
-   UserManager<ApplicationUser> users,
-   SignInManager<ApplicationUser> signIn,
-   IOptions<AuthServerOptions> authOptions
+   IWebHostEnvironment env
 ) : Controller {
 
    /// <summary>
-   /// Development-only token endpoint.
+   /// Deprecated Development-only endpoint.
    ///
-   /// Allows issuing an access token by posting email + password (+ optional ApiKey).
-   /// This endpoint must NEVER exist in production environments.
+   /// Token issuance now happens via the OpenIddict token endpoint using
+   /// grant_type=dev_password. This shim exists only to guide callers.
    /// </summary>
    [AllowAnonymous]
    [HttpPost("token")]
-   public async Task<IActionResult> Token(
-      [FromBody] DevLoginDto dto,
-      CancellationToken ct
-   ) {
+   public IActionResult Token() {
       if (!env.IsDevelopment())
          return NotFound();
 
-      if (string.IsNullOrWhiteSpace(dto.Email) ||
-          string.IsNullOrWhiteSpace(dto.Password)) {
-         return BadRequest(new { error = "email_and_password_required" });
-      }
-
-      // Resolve API scope/resource from configuration
-      var apiKey = string.IsNullOrWhiteSpace(dto.Api) ? "CarRentalApi" : dto.Api.Trim();
-
-      if (!authOptions.Value.Apis.TryGetValue(apiKey, out var api)) {
-         return BadRequest(new {
-            error = "unknown_api",
-            api = apiKey,
-            allowed = authOptions.Value.Apis.Keys.OrderBy(x => x).ToArray()
-         });
-      }
-
-      // Authenticate user via ASP.NET Identity
-      var user = await users.FindByEmailAsync(dto.Email);
-      if (user is null)
-         return Unauthorized();
-
-      var valid = await users.CheckPasswordAsync(user, dto.Password);
-      if (!valid)
-         return Unauthorized();
-
-      // Create ClaimsPrincipal using Identity infrastructure
-      var principal = await signIn.CreateUserPrincipalAsync(user);
-      var identity = (ClaimsIdentity)principal.Identity!;
-
-      // Mandatory OIDC subject (sub)
-      var subject =
-         principal.FindFirstValue(ClaimTypes.NameIdentifier)
-         ?? user.Id;
-
-      // Use "sub" claim name consistent with your APIs (IdentityClaims.Subject = "sub")
-      principal.SetClaim(AuthClaims.Subject, subject);
-
-      // Domain claims (keep minimal: sub, email, created_at, admin_rights)
-      identity.AddClaim(new Claim(AuthClaims.AccountType, user.AccountType));
-
-      // Scope + Resource (IMPORTANT: scope != resource)
-      principal.SetScopes(api.Scope);         // e.g. "carrental_api"
-      principal.SetResources(api.Resource);   // e.g. "carrental-api"
-
-      // Apply centralized destinations mapping
-      foreach (var claim in principal.Claims)
-         claim.SetDestinations(
-            ClaimDestinations.GetDestinations(claim, principal)
-         );
-
-      return SignIn(
-         principal,
-         OpenIddictServerAspNetCoreDefaults.AuthenticationScheme
+      return Problem(
+         title: "Deprecated development endpoint",
+         detail:
+            $"Use POST /{AuthServerOptions.TokenEndpointPath} with Content-Type 'application/x-www-form-urlencoded', " +
+            $"grant_type={DevGrantTypes.DevPassword}, client_id=dev-token-client, email=<user>, password=<password> and scope=<scopes>.",
+         statusCode: StatusCodes.Status410Gone,
+         extensions: new Dictionary<string, object?> {
+            ["token_endpoint"] = "/" + AuthServerOptions.TokenEndpointPath,
+            [Parameters.GrantType] = DevGrantTypes.DevPassword,
+            [Parameters.ClientId] = "dev-token-client",
+            ["example"] =
+               $"grant_type={DevGrantTypes.DevPassword}&client_id=dev-token-client&email=admin@mail.local&password=Geh1m_&scope=openid profile banking_api"
+         }
       );
    }
 }
-
-/// <summary>
-/// Dev login request.
-/// Api is optional and selects which API the access token is meant for.
-/// Example:
-///  - "CarRentalApi" -> scope=carrental_api, resource=carrental-api
-/// </summary>
-public sealed record DevLoginDto(
-   string Email,
-   string Password,
-   string? Api = "CarRentalApi"
-);
 
 /*
 ==========================================================

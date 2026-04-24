@@ -7,6 +7,7 @@ public partial class EmployeesList : IDisposable {
 
    [Inject] private IEmployeeClient EmployeeClient { get; set; } = default!;
    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+   [Inject] private IConfiguration Configuration { get; set; } = default!;
    [Inject] private ILogger<EmployeesList> Logger { get; set; } = default!;
 
    [Parameter, SupplyParameterFromQuery]
@@ -70,5 +71,18 @@ public partial class EmployeesList : IDisposable {
 
       Logger.LogInformation("EmployeesList: nav: {Target}", target);
       NavigationManager.NavigateTo(target);
+   }
+
+   private void OpenRegisterEmployee() {
+      var authority = Configuration["AuthServer:Authority"]?.TrimEnd('/');
+      if (string.IsNullOrWhiteSpace(authority)) {
+         ErrorMessage = "AuthServer:Authority is not configured.";
+         Logger.LogWarning("EmployeesList: AuthServer:Authority is missing.");
+         return;
+      }
+
+      var target = $"{authority}/Identity/Account/RegisterEmployee";
+      Logger.LogInformation("EmployeesList: nav: {Target}", target);
+      NavigationManager.NavigateTo(target, forceLoad: true);
    }
 }

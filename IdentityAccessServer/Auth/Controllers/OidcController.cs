@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using IdentityAccessServer.Auth.Claims;
+using IdentityAccessServer.Auth.Dev;
 using IdentityAccessServer.Auth.Options;
 using IdentityAccessServer.Infrastructure.Identity;
 using Microsoft.AspNetCore;
@@ -13,19 +14,20 @@ using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation.AspNetCore;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
-namespace IdentityAccessServer.Auth.Endpoints;
+namespace IdentityAccessServer.Auth.Controllers;
 
 [ApiController]
 public sealed class OidcController(
    UserManager<ApplicationUser> users,
    SignInManager<ApplicationUser> signIn,
    IOptions<AuthServerOptions> authOptions,
+   IWebHostEnvironment env,
    ILogger<OidcController> logger
 ) : Controller {
    private readonly AuthServerOptions _auth = authOptions.Value;
 
-   // --------------------------------------------------------------------
-   // /connect/authorize
+   
+   #region /connect/authorize
    // --------------------------------------------------------------------
    [HttpGet("/" + AuthServerOptions.AuthorizationEndpointPath)]
    public async Task<IActionResult> Authorize(CancellationToken ct) {
@@ -63,79 +65,23 @@ public sealed class OidcController(
          );
       }
 
-      var principal = await signIn.CreateUserPrincipalAsync(user);
-      var identity = (ClaimsIdentity)principal.Identity!;
-
-      // --- Subject (sub) -----------------------------------------------------
-      var subject = user.Id; // GUID string
-      SetOrReplaceClaim(identity, AuthClaims.Subject, subject);
-
-      // --- Standard / profile claims ----------------------------------------
-      if (!string.IsNullOrWhiteSpace(user.Email))
-         SetOrReplaceClaim(identity, AuthClaims.Email, user.Email);
-
-      if (!string.IsNullOrWhiteSpace(user.UserName))
-         SetOrReplaceClaim(identity, AuthClaims.PreferredUsername, user.UserName);
-
-      // --- Domain-specific ---------------------------------------------------
-      // Role mapping for ASP.NET authorization:
-      // We keep a canonical domain claim `account_type` (lowercase) and derive
-      // the ASP.NET role claim (TitleCase) from it.
-
-      var accountType = (user.AccountType ?? "customer").Trim().ToLowerInvariant();
-
-      // Backward-compatible fallback: if an account has AdminRights, treat it as employee.
-      if (user.AdminRights > 0)
-         accountType = "employee";
-
-      // Emit domain claim used by APIs.
-      SetOrReplaceClaim(identity, AuthClaims.AccountType, accountType);
-
-      // Emit role claim used by ASP.NET authorization / [Authorize(Roles=...)].
-      var role = accountType switch {
-         "employee" => "Employee",
-         "owner" => "Owner",
-         _ => "Customer"
-      };
-      SetOrReplaceClaim(identity, AuthClaims.Role, role);
-
-      // Keep the AdminRights bitmask (fine-grained permissions for employees)
-      SetOrReplaceClaim(identity, AuthClaims.AdminRights, ((int)user.AdminRights).ToString());
-
-      // --- Lifecycle timestamps ---------------------------------------------
-      if (user.CreatedAt != default)
-         SetOrReplaceClaim(identity, AuthClaims.CreatedAt, user.CreatedAt.ToUniversalTime().ToString("O"));
-
-      if (user.UpdatedAt != default)
-         SetOrReplaceClaim(identity, AuthClaims.UpdatedAt, user.UpdatedAt.ToUniversalTime().ToString("O"));
-
-      // --- Scopes & resources ------------------------------------------------
-      var requestedScopes = request.GetScopes().ToArray();
-      principal.SetScopes(requestedScopes);
-
-      var resources = ResolveResourcesFromScopes(requestedScopes);
-      if (resources.Length > 0)
-         principal.SetResources(resources);
+      var tokenContext = await CreateTokenContextAsync(user, request.GetScopes());
       
       logger.LogInformation(
          "Authorize: user='{UserName}', sub='{Sub}', role='{Role}', adminRights='{Rights}', scopes=[{Scopes}], resources=[{Resources}]",
          user.UserName,
-         subject,
-         role,
+         tokenContext.Subject,
+         tokenContext.Role,
          user.AdminRights,
-         string.Join(", ", requestedScopes),
-         resources.Length == 0 ? "<none>" : string.Join(", ", resources)
+         string.Join(", ", tokenContext.RequestedScopes),
+         tokenContext.Resources.Length == 0 ? "<none>" : string.Join(", ", tokenContext.Resources)
       );
 
-      // --- Destinations mapping ----------------------------------------------
-      foreach (var claim in principal.Claims)
-         claim.SetDestinations(ClaimDestinations.GetDestinations(claim, principal));
-
-      foreach (var c in principal.Claims)
+      foreach (var c in tokenContext.Principal.Claims)
          logger.LogDebug("Authorize: claim '{Type}'='{Value}' -> destinations: {Destinations}",
             c.Type, c.Value, string.Join(", ", c.GetDestinations()));
 
-      return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+      return SignIn(tokenContext.Principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
    }
 
    private static void SetOrReplaceClaim(ClaimsIdentity identity, string type, string value) {
@@ -145,9 +91,9 @@ public sealed class OidcController(
 
       identity.AddClaim(new Claim(type, value));
    }
-
-   // --------------------------------------------------------------------
-   // /connect/token
+   #endregion
+   
+   #region /connect/token
    // --------------------------------------------------------------------
    [HttpPost("/" + AuthServerOptions.TokenEndpointPath)]
    public async Task<IActionResult> Token(CancellationToken ct) {
@@ -158,6 +104,37 @@ public sealed class OidcController(
          "Token request: grant_type='{GrantType}', client_id='{ClientId}', scope='{Scope}'",
          request.GrantType, request.ClientId, request.Scope
       );
+
+      if (string.Equals(request.GrantType, DevGrantTypes.DevPassword, StringComparison.Ordinal)) {
+         if (!env.IsDevelopment())
+            return OpenIddictError(Errors.UnauthorizedClient,
+               "The dev_password grant is only available in Development.");
+
+         var email = request.GetParameter("email")?.ToString()
+                     ?? request.GetParameter(Parameters.Username)?.ToString();
+         var password = request.GetParameter(Parameters.Password)?.ToString();
+
+         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            return OpenIddictError(Errors.InvalidRequest,
+               "Parameters 'email' (or 'username') and 'password' are required.");
+
+         var user = await users.FindByEmailAsync(email);
+         if (user is null || !await users.CheckPasswordAsync(user, password))
+            return OpenIddictError(Errors.InvalidGrant, "Invalid email or password.");
+
+         var tokenContext = await CreateTokenContextAsync(user, request.GetScopes());
+
+         logger.LogInformation(
+            "Token(dev_password): user='{UserName}', sub='{Sub}', role='{Role}', scopes=[{Scopes}], resources=[{Resources}]",
+            user.UserName,
+            tokenContext.Subject,
+            tokenContext.Role,
+            string.Join(", ", tokenContext.RequestedScopes),
+            tokenContext.Resources.Length == 0 ? "<none>" : string.Join(", ", tokenContext.Resources)
+         );
+
+         return SignIn(tokenContext.Principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+      }
 
       if (request.IsAuthorizationCodeGrantType() || request.IsRefreshTokenGrantType()) {
          var result = await HttpContext.AuthenticateAsync(
@@ -205,9 +182,9 @@ public sealed class OidcController(
       logger.LogWarning("Token: unsupported grant_type '{GrantType}'", request.GrantType);
       return BadRequest(new { error = "unsupported_grant_type" });
    }
-
-   // --------------------------------------------------------------------
-   // /connect/userinfo
+   #endregion
+   
+   #region /connect/userinfo
    // --------------------------------------------------------------------
    [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
    [HttpGet("/" + AuthServerOptions.UserInfoEndpointPath)]
@@ -228,9 +205,9 @@ public sealed class OidcController(
          updated_at = User.FindFirst(AuthClaims.UpdatedAt)?.Value
       });
    }
-
-   // --------------------------------------------------------------------
-   // Helpers
+   #endregion
+   
+   #region Helpers
    // --------------------------------------------------------------------
    private string[] ResolveResourcesFromScopes(string[] requestedScopes) {
       static bool IsNonApiScope(string s)
@@ -265,4 +242,76 @@ public sealed class OidcController(
          .Distinct(StringComparer.Ordinal)
          .ToArray();
    }
+
+   private async Task<TokenContext> CreateTokenContextAsync(
+      ApplicationUser user,
+      IEnumerable<string> requestedScopes
+   ) {
+      var principal = await signIn.CreateUserPrincipalAsync(user);
+      var identity = (ClaimsIdentity)principal.Identity!;
+
+      var subject = user.Id;
+      SetOrReplaceClaim(identity, AuthClaims.Subject, subject);
+
+      if (!string.IsNullOrWhiteSpace(user.Email))
+         SetOrReplaceClaim(identity, AuthClaims.Email, user.Email);
+
+      if (!string.IsNullOrWhiteSpace(user.UserName))
+         SetOrReplaceClaim(identity, AuthClaims.PreferredUsername, user.UserName);
+
+      var accountType = user.AccountType.Trim().ToLowerInvariant();
+      if (user.AdminRights > 0)
+         accountType = "employee";
+
+      SetOrReplaceClaim(identity, AuthClaims.AccountType, accountType);
+
+      var role = accountType switch {
+         "employee" => "Employee",
+         "customer" => "Customer",
+         _ => "Customer"
+      };
+      SetOrReplaceClaim(identity, AuthClaims.Role, role);
+      SetOrReplaceClaim(identity, AuthClaims.AdminRights, ((int)user.AdminRights).ToString());
+      SetOrReplaceClaim(identity, AuthClaims.MustChangePassword, user.MustChangePassword ? "true" : "false");
+
+      if (user.CreatedAt != default)
+         SetOrReplaceClaim(identity, AuthClaims.CreatedAt, user.CreatedAt.ToUniversalTime().ToString("O"));
+
+      if (user.UpdatedAt != default)
+         SetOrReplaceClaim(identity, AuthClaims.UpdatedAt, user.UpdatedAt.ToUniversalTime().ToString("O"));
+
+      var scopes = requestedScopes
+         .Where(s => !string.IsNullOrWhiteSpace(s))
+         .Distinct(StringComparer.Ordinal)
+         .ToArray();
+
+      principal.SetScopes(scopes);
+
+      var resources = ResolveResourcesFromScopes(scopes);
+      if (resources.Length > 0)
+         principal.SetResources(resources);
+
+      foreach (var claim in principal.Claims)
+         claim.SetDestinations(ClaimDestinations.GetDestinations(claim, principal));
+
+      return new TokenContext(principal, subject, role, scopes, resources);
+   }
+
+   private IActionResult OpenIddictError(string error, string description)
+      => Forbid(
+         new AuthenticationProperties(new Dictionary<string, string?> {
+            [OpenIddictServerAspNetCoreConstants.Properties.Error] = error,
+            [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = description
+         }),
+         OpenIddictServerAspNetCoreDefaults.AuthenticationScheme
+      );
+
+   private sealed record TokenContext(
+      ClaimsPrincipal Principal,
+      string Subject,
+      string Role,
+      string[] RequestedScopes,
+      string[] Resources
+   );
+   #endregion
 }

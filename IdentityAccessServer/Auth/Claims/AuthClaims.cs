@@ -49,6 +49,12 @@ public static class AuthClaims {
    /// </summary>
    public const string AdminRights = "admin_rights";
 
+   /// <summary>
+   /// Indicates whether the user still has to replace an administrator-provided
+   /// initial password.
+   /// </summary>
+   public const string MustChangePassword = "must_change_password";
+
    //--- Lifecycle / housekeeping claims -------
    /// <summary>
    /// Account creation timestamp (UTC, ISO-8601).

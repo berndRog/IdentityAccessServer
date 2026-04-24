@@ -28,6 +28,9 @@ public static class ClaimDestinations {
       // role -> UI-Navigation / AccessToken (für APIs).
       if (claim.Type == AuthClaims.Role)
          return new[] { Destinations.AccessToken, Destinations.IdentityToken };
+
+      if (claim.Type == AuthClaims.MustChangePassword)
+         return new[] { Destinations.AccessToken, Destinations.IdentityToken };
       
       // Lifecycle / housekeeping (debuggable in id_token, usable in API)
       if (claim.Type is AuthClaims.CreatedAt or AuthClaims.UpdatedAt) 
@@ -67,7 +70,6 @@ Ziel:
    und diskutiert anschließend Sicherheits- und Datenminimierungsaspekte.
 -----------------------------------------------------------------------
 */
-
 
 
 

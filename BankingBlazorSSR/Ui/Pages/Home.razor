@@ -56,5 +56,5 @@
 @code {
   private string CurrentRelativeUrl => Nav.ToBaseRelativePath(Nav.Uri);
   private string LoginUrl =>
-    "/identity/login?returnUrl=" + Uri.EscapeDataString("/" + CurrentRelativeUrl);
+    "/identity/login?returnUrl=" + Uri.EscapeDataString("/entry");
 }

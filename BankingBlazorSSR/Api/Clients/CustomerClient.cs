@@ -18,13 +18,13 @@ public sealed class CustomerClient(
       => SendAsync<ProvisionDto>(
          () => _http.PostAsJsonAsync($"{Base}/customers/me/provision", new { }, ct), ct);
 
-   // GET bankingapi/v1/customers/me/profile -> 200 OK + OwnerProfileDto
+   // GET /banking/v2/customers/me/profile -> 200 OK + CustomerDto
    public Task<Result<CustomerDto>> GetProfileAsync(CancellationToken ct = default) 
       => SendAsync<CustomerDto>(() => _http.GetAsync($"{Base}/customers/me/profile", ct), ct);
 
-   // PUT bankingapi/v1/customers/me/profile -> 200 OK + OwnerProfileDto
+   // PUT /banking/v2/customers/me/profile -> 200 OK + CustomerDto
    public Task<Result<CustomerDto>> UpdateProfileAsync(
-      CustomerDto dto,
+      CustomerDto dto, 
       CancellationToken ct = default
    ) => SendAsync<CustomerDto>(
          () => _http.PutAsJsonAsync($"{Base}/customers/me/profile", dto, ct), ct);

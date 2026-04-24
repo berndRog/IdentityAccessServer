@@ -34,25 +34,19 @@ public class IdentityController(
    public IActionResult Login(string? returnUrl = null) {
       logger.LogInformation("Login requested. ReturnUrl: {ReturnUrl}", returnUrl ?? "(none)");
 
-      if (User.Identity?.IsAuthenticated == true) {
-         logger.LogInformation("User already authenticated: {User}", User.Identity.Name);
-
-         var targetUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
-         return Url.IsLocalUrl(targetUrl)
-            ? LocalRedirect(targetUrl)
-            : LocalRedirect("/");
-      }
-
-      var target = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
+      var target = string.IsNullOrWhiteSpace(returnUrl) ? "/entry" : returnUrl;
       if (!Url.IsLocalUrl(target))
-         target = "/";
+         target = "/entry";
 
       var props = new AuthenticationProperties {
          RedirectUri = target,
          IsPersistent = false
       };
+      props.Parameters["prompt"] = "login";
 
-      logger.LogInformation("Challenging OIDC. RedirectUri: {RedirectUri}", props.RedirectUri);
+      logger.LogInformation("Challenging OIDC. RedirectUri: {RedirectUri}; CurrentUser: {User}",
+         props.RedirectUri,
+         User.Identity?.Name ?? "(anonymous)");
 
       return Challenge(props, OpenIdConnectDefaults.AuthenticationScheme);
    }

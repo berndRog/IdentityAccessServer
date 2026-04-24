@@ -37,10 +37,10 @@ public sealed class SeedUsersHostedService : IHostedService {
       // ----------------------------
       await EnsureUserAsync(
          users,
-         id: Guid.Parse("00000000-0000-0000-0001-000000000001"),
-         email: "owner@mail.local",
+         id: Guid.Parse("00000999-0000-0000-0001-000000000000"),
+         email: "customer@mail.local",
          password: "Geh1m_",
-         accountType: "owner",
+         accountType: "customer",
          adminRights: AdminRights.None
       );
 
@@ -50,7 +50,7 @@ public sealed class SeedUsersHostedService : IHostedService {
       // ----------------------------
       await EnsureUserAsync(
          users,
-         id: Guid.Parse("00000000-0000-0000-0002-000000000001"),
+         id: Guid.Parse("00000000-0099-0000-0000-000000000000"),
          email: "admin@mail.local",
          password: "Geh1m_",
          accountType: "employee",

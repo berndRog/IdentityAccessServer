@@ -100,6 +100,8 @@ namespace IdentityAccessServer.Areas.Identity.Pages.Account {
          ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
          if (ModelState.IsValid) {
             var user = CreateUser();
+            user.AccountType = "customer";
+            user.AdminRights = IdentityAccessServer.Data.AdminRights.None;
 
             await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);

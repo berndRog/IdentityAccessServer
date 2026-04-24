@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 namespace BankingBlazorSsr.Api.Dtos;
 
 public sealed record EmployeeDto {
@@ -18,10 +19,12 @@ public sealed record EmployeeDto {
    [Required]
    [EmailAddress(ErrorMessage = "Bitte geben Sie eine zulässige E-Mail-Adresse ein.")]
    [StringLength(254)] // RFC 5321 practical limit
+   [JsonIgnore]
    public string EmailString { get; set; } = string.Empty;
 
    [Phone(ErrorMessage = "Please enter a valid phone number.")]
    [StringLength(34)]
+   [JsonIgnore]
    public string? PhoneString { get; set; }
    
    [Required]
@@ -30,6 +33,25 @@ public sealed record EmployeeDto {
    public string PersonnelNumber { get; set; } = string.Empty;
    
    public bool IsActive { get; set; }
+   [JsonIgnore]
    public int AdminRights { get; set; }
+
+   [JsonPropertyName("email")]
+   public string Email {
+      get => EmailString;
+      set => EmailString = value;
+   }
+
+   [JsonPropertyName("phone")]
+   public string? Phone {
+      get => PhoneString;
+      set => PhoneString = value;
+   }
+
+   [JsonPropertyName("adminRightsInt")]
+   public int AdminRightsInt {
+      get => AdminRights;
+      set => AdminRights = value;
+   }
 
 }

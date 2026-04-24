@@ -1,4 +1,5 @@
 using IdentityAccessServer.Auth.Options;
+using IdentityAccessServer.Auth.Dev;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
@@ -17,6 +18,7 @@ namespace IdentityAccessServer.Auth.Seeding;
 public sealed class SeedHostedService(
    IServiceProvider sp,
    IConfiguration config,
+   IWebHostEnvironment env,
    ILogger<SeedHostedService> logger
 ) : IHostedService {
 
@@ -276,6 +278,29 @@ public sealed class SeedHostedService(
       AddApiScopes(service, "CarRentalApi", "BankingApi", "ImagesApi");
 
       await UpsertAsync(service, requiresSecret: true);
+
+      // ------------------------------------------------------------
+      // 6) Development-only dev-password client (Public + Custom Token Grant)
+      // ------------------------------------------------------------
+      if (env.IsDevelopment()) {
+         var devClient = new OpenIddictApplicationDescriptor {
+            ClientId = "dev-token-client",
+            DisplayName = "Development Token Client",
+            ClientType = ClientTypes.Public,
+
+            Permissions = {
+               Permissions.Endpoints.Token,
+               Permissions.Prefixes.GrantType + DevGrantTypes.DevPassword,
+               Permissions.Prefixes.Scope + Scopes.OpenId,
+               Permissions.Prefixes.Scope + Scopes.Profile
+            }
+         };
+
+         AddApiScopes(devClient, "BankingApi", "CarRentalApi", "ImagesApi");
+         AllowRefreshTokens(devClient);
+
+         await UpsertAsync(devClient, requiresSecret: false);
+      }
    }
 
    public Task StopAsync(CancellationToken ct) => Task.CompletedTask;

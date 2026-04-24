@@ -68,9 +68,8 @@
   private string WithReturnUrl(string targetPath)
     => targetPath + "?returnUrl=" + Uri.EscapeDataString("/" + CurrentRelativeUrl);
 
-  // Login mit ReturnUrl (aktuelle Seite)
-  private string LoginUrl =>
-    "/identity/login?returnUrl=" + Uri.EscapeDataString("/" + CurrentRelativeUrl);
+  // Route every fresh login through /entry so provisioning/onboarding can decide the next step.
+  private string LoginUrl => "/identity/login?returnUrl=" + Uri.EscapeDataString("/entry");
 
 
   // serverseitiger Logout (Cookie + OIDC)

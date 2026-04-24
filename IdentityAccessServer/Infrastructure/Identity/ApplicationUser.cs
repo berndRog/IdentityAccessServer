@@ -44,6 +44,12 @@ public sealed class ApplicationUser : IdentityUser {
    /// Backed by an int column in the database.
    /// </summary>
    public AdminRights AdminRights { get; set; } = AdminRights.None;
+
+   /// <summary>
+   /// Forces the user to change the administrator-provided initial password
+   /// before continuing into the OIDC client application.
+   /// </summary>
+   public bool MustChangePassword { get; set; } = false;
    
    // ------------------------------------------------------------------
    // OIDC profile claims ("profile" scope)
@@ -83,7 +89,6 @@ Didactic goals:
    Employee-Account	                     egal	      egal	         niemals automatisch löschen
    
 */
-
 
 
 

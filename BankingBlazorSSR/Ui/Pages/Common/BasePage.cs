@@ -18,7 +18,7 @@ public abstract class BasePage : ComponentBase {
 
       switch (error.Status) {
          case 401:
-            Nav.NavigateTo("/identity/login", true);
+            Nav.NavigateTo("/identity/login?returnUrl=%2Fentry", true);
             return;
 
          case 403:

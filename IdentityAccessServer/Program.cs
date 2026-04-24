@@ -1,5 +1,6 @@
 using IdentityAccessServer.Auth.Options;
 using IdentityAccessServer.Auth.Seeding;
+using IdentityAccessServer.Auth.Dev;
 using IdentityAccessServer.Infrastructure.Identity;
 using IdentityAccessServer.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -30,6 +31,18 @@ public static class Program {
             "AuthServer:IssuerUri is required.")
          .Validate(o => Uri.TryCreate(o.IssuerUri, UriKind.Absolute, out _),
             "AuthServer:IssuerUri must be a valid absolute URI.")
+         .Validate(o => o.Tokens.AccessTokenLifetime > TimeSpan.Zero,
+            "AuthServer:Tokens:AccessTokenLifetime must be greater than 00:00:00.")
+         .Validate(o => o.Tokens.IdentityTokenLifetime > TimeSpan.Zero,
+            "AuthServer:Tokens:IdentityTokenLifetime must be greater than 00:00:00.")
+         .Validate(o => o.Tokens.AuthorizationCodeLifetime > TimeSpan.Zero,
+            "AuthServer:Tokens:AuthorizationCodeLifetime must be greater than 00:00:00.")
+         .Validate(o => o.Tokens.RefreshTokenLifetime > TimeSpan.Zero,
+            "AuthServer:Tokens:RefreshTokenLifetime must be greater than 00:00:00.")
+         .Validate(o => o.Tokens.AuthorizationCodeLifetime <= o.Tokens.RefreshTokenLifetime,
+            "AuthServer:Tokens:AuthorizationCodeLifetime must not exceed RefreshTokenLifetime.")
+         .Validate(o => o.Tokens.IdentityTokenLifetime <= o.Tokens.RefreshTokenLifetime,
+            "AuthServer:Tokens:IdentityTokenLifetime must not exceed RefreshTokenLifetime.")
          .ValidateOnStart();
 
 
@@ -61,7 +74,7 @@ public static class Program {
       // ----------------------------
       ConfigureDatabase(builder.Services, builder.Configuration, builder.Environment);
       ConfigureIdentity(builder.Services);
-      ConfigureOpenIddict(builder.Services, authServer);
+      ConfigureOpenIddict(builder.Services, authServer, builder.Environment);
       ConfigureMvcAndUi(builder.Services);
 
       // Seed demo user + standard clients (Blazor, Android, Service)
@@ -210,7 +223,11 @@ public static class Program {
       services.AddAuthorization();
    }
 
-   private static void ConfigureOpenIddict(IServiceCollection services, AuthServerOptions auth) {
+   private static void ConfigureOpenIddict(
+      IServiceCollection services,
+      AuthServerOptions auth,
+      IWebHostEnvironment env
+   ) {
       services.AddOpenIddict()
 
          // Core (EF storage)
@@ -234,10 +251,12 @@ public static class Program {
                .SetConfigurationEndpointUris("/" + AuthServerOptions.ConfigurationEndpointPath);
 
             // Flows
-            options
-               .AllowAuthorizationCodeFlow()
-               .AllowClientCredentialsFlow()
-               .AllowRefreshTokenFlow();
+            options.AllowAuthorizationCodeFlow();
+            options.AllowClientCredentialsFlow();
+            options.AllowRefreshTokenFlow();
+
+            if (env.IsDevelopment())
+               options.AllowCustomFlow(DevGrantTypes.DevPassword);
 
             // PKCE required for public clients
             options
@@ -245,7 +264,10 @@ public static class Program {
             
             // Token lifetimes
             options
-               .SetAccessTokenLifetime(TimeSpan.FromMinutes(30));
+               .SetAccessTokenLifetime(auth.Tokens.AccessTokenLifetime)
+               .SetIdentityTokenLifetime(auth.Tokens.IdentityTokenLifetime)
+               .SetAuthorizationCodeLifetime(auth.Tokens.AuthorizationCodeLifetime)
+               .SetRefreshTokenLifetime(auth.Tokens.RefreshTokenLifetime);
             
 
             // Scopes (standard + configured API scopes)
