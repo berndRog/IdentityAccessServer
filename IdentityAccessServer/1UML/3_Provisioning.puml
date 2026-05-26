@@ -1,12 +1,12 @@
 @startuml
-title First Login triggers Owner Provisioning
+title First Login triggers Customer Provisioning
 
 actor User
-participant "Blazor SSR Client" as Client
-participant "OIDC Middleware" as Middleware
-participant "Identity Provider\n(OpenIddict)" as IdP
-participant "Banking API" as API
-participant "Owners Module" as Owners
+participant "BlazoSSR\nClient" as Client
+participant "Middleware\nOIDC" as Middleware
+participant "Identity&Access\nServer" as IdP
+participant "BankingAPI\nREST API" as API
+participant "Banking\nDatabase" as Database
 
 User -> Client : Login
 Client -> Middleware : Challenge()
@@ -19,14 +19,14 @@ Middleware -> Client : Auth cookie
 == First authenticated request ==
 
 Client -> API : GET /customers/me/profile
-API -> Owners : FindBySubject(sub)
+API -> Database : FindBySubject(sub)
 
 alt Owner exists
-    Owners -> API : OwnerProfile
+    Database -> API : CustomerProfile
     API -> Client : 200 OK
 else First login
-    Owners -> Owners : Create Owner(sub, email, name)
-    Owners -> API : OwnerProfile
+    Database -> Database : Create Customer\nsub, email, name
+    Database -> API : CustomerProfile
     API -> Client : 200 OK (provisioned)
 end
 

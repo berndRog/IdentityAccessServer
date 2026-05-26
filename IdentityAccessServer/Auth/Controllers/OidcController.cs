@@ -20,16 +20,15 @@ namespace IdentityAccessServer.Auth.Controllers;
 public sealed class OidcController(
    UserManager<ApplicationUser> users,
    SignInManager<ApplicationUser> signIn,
-   IOptions<AuthServerOptions> authOptions,
+   IOptions<IdentityAccessServerOptions> authOptions,
    IWebHostEnvironment env,
    ILogger<OidcController> logger
 ) : Controller {
-   private readonly AuthServerOptions _auth = authOptions.Value;
+   private readonly IdentityAccessServerOptions _auth = authOptions.Value;
 
    
-   #region /connect/authorize
-   // --------------------------------------------------------------------
-   [HttpGet("/" + AuthServerOptions.AuthorizationEndpointPath)]
+   #region /connect/authorize --------------------------------------------------------
+   [HttpGet("/" + IdentityAccessServerOptions.AuthorizationEndpointPath)]
    public async Task<IActionResult> Authorize(CancellationToken ct) {
       var request = HttpContext.GetOpenIddictServerRequest()
          ?? throw new InvalidOperationException("OpenID Connect request missing.");
@@ -93,9 +92,8 @@ public sealed class OidcController(
    }
    #endregion
    
-   #region /connect/token
-   // --------------------------------------------------------------------
-   [HttpPost("/" + AuthServerOptions.TokenEndpointPath)]
+   #region /connect/token ------------------------------------------------------------
+   [HttpPost("/" + IdentityAccessServerOptions.TokenEndpointPath)]
    public async Task<IActionResult> Token(CancellationToken ct) {
       var request = HttpContext.GetOpenIddictServerRequest()
          ?? throw new InvalidOperationException("OpenID Connect request missing.");
@@ -184,10 +182,9 @@ public sealed class OidcController(
    }
    #endregion
    
-   #region /connect/userinfo
-   // --------------------------------------------------------------------
+   #region /connect/userinfo ---------------------------------------------------------
    [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
-   [HttpGet("/" + AuthServerOptions.UserInfoEndpointPath)]
+   [HttpGet("/" + IdentityAccessServerOptions.UserInfoEndpointPath)]
    public IActionResult UserInfo() {
       logger.LogInformation(
          "UserInfo request: sub='{Sub}', azp='{Azp}'",
@@ -207,8 +204,7 @@ public sealed class OidcController(
    }
    #endregion
    
-   #region Helpers
-   // --------------------------------------------------------------------
+   #region Helpers -------------------------------------------------------------------
    private string[] ResolveResourcesFromScopes(string[] requestedScopes) {
       static bool IsNonApiScope(string s)
          => s.Equals("openid", StringComparison.Ordinal) ||
@@ -232,7 +228,7 @@ public sealed class OidcController(
          }
          else {
             logger.LogWarning(
-               "Unknown API scope requested: '{Scope}'. No resource/audience mapping found in AuthServer:Apis.",
+               "Unknown API scope requested: '{Scope}'. No resource/audience mapping found in IdentityAccessServer:Apis.",
                scope
             );
          }

@@ -1,7 +1,7 @@
 namespace IdentityAccessServer.Auth.Claims;
 
 /// <summary>
-/// Central definition of all claim types issued by the AuthServer.
+/// Central definition of all claim types issued by the IdentityAccessServer.
 ///
 /// This class is the single source of truth for:
 /// - OIDC standard claims

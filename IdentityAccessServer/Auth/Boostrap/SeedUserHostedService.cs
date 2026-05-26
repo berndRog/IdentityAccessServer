@@ -1,7 +1,6 @@
 using IdentityAccessServer.Data;
 using IdentityAccessServer.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
-using static IdentityAccessServer.Data.AdminRights;
 namespace IdentityAccessServer.Auth.Seeding;
 
 /// <summary>
@@ -11,14 +10,10 @@ namespace IdentityAccessServer.Auth.Seeding;
 ///
 /// This is course/demo-only.
 /// </summary>
-public sealed class SeedUsersHostedService : IHostedService {
+public sealed class SeedUsersHostedService(IServiceProvider sp) : IHostedService {
    
-   private readonly IServiceProvider _sp;
-
-   public SeedUsersHostedService(IServiceProvider sp) => _sp = sp;
-
    public async Task StartAsync(CancellationToken ct) {
-      using var scope = _sp.CreateScope();
+      using var scope = sp.CreateScope();
       var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
       
       // ----------------------------
@@ -26,28 +21,32 @@ public sealed class SeedUsersHostedService : IHostedService {
       // ----------------------------
       // await EnsureUserAsync(
       //    users,
-      //    id: Guid.Parse("00000000-0000-0000-0001-000000000002"),
+      //    id: Guid.Parse("00000000-0000-0000-0001-000000000001"),
       //    email: "customer@mail.local",
       //    password: "Geh1m_",
       //    adminRights: AdminRights.None
       // );
       
       // ----------------------------
-      // Owner demo user (starts as Pending)
-      // ----------------------------
-      await EnsureUserAsync(
-         users,
-         id: Guid.Parse("00000999-0000-0000-0001-000000000000"),
-         email: "customer@mail.local",
-         password: "Geh1m_",
-         accountType: "customer",
-         adminRights: AdminRights.None
-      );
-
-      // ----------------------------
       // Admin demo user (Employee)
       // Example rights: manage cars + bookings + customers + employees
       // ----------------------------
+      // await EnsureUserAsync(
+      //    users,
+      //    id: Guid.Parse("00000000-0001-0000-0000-000000000000"),
+      //    email: "v.vogel@banking.de",
+      //    password: "Geh1m_",
+      //    accountType: "employee",
+      //    adminRights: (AdminRights) 127
+      // );
+      // await EnsureUserAsync(
+      //    users,
+      //    id: Guid.Parse("00000000-0002-0000-0000-000000000000"),
+      //    email: "w.wagner@banking.de",
+      //    password: "Geh1m_",
+      //    accountType: "employee",
+      //    adminRights: (AdminRights) 511
+      // );
       await EnsureUserAsync(
          users,
          id: Guid.Parse("00000000-0099-0000-0000-000000000000"),

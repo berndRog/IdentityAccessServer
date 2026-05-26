@@ -16,6 +16,7 @@ public sealed class EndSessionController(
    ILogger<EndSessionController> logger
 ) : Controller {
 
+   #region /connect/endsession -------------------------------------------------------
    // GET /connect/endsession
    [HttpGet("endsession")]
    public async Task<IActionResult> EndSession(CancellationToken ct) {
@@ -95,6 +96,7 @@ public sealed class EndSessionController(
       var leftB = b.GetLeftPart(UriPartial.Path).TrimEnd('/');
       return string.Equals(leftA, leftB, StringComparison.OrdinalIgnoreCase);
    }
+   #endregion
 }
 
 /*
@@ -121,7 +123,7 @@ Sie muss:
 - und beim Client als PostLogoutRedirectUri registriert sein (Whitelist)
 
 Merksatz:
-Der AuthServer validiert Redirects, nicht der Client.
+Der IdentityAccessServer validiert Redirects, nicht der Client.
 
 3) Was löst das praktisch?
 --------------------------

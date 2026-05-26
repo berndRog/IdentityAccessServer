@@ -15,13 +15,13 @@ namespace IdentityAccessServer.Areas.Identity.Pages.Account;
 public sealed class ChangeInitialPasswordModel : PageModel {
    private readonly UserManager<ApplicationUser> _userManager;
    private readonly SignInManager<ApplicationUser> _signInManager;
-   private readonly AuthServerOptions _authServerOptions;
+   private readonly IdentityAccessServerOptions _authServerOptions;
    private readonly ILogger<ChangeInitialPasswordModel> _logger;
 
    public ChangeInitialPasswordModel(
       UserManager<ApplicationUser> userManager,
       SignInManager<ApplicationUser> signInManager,
-      IOptions<AuthServerOptions> authServerOptions,
+      IOptions<IdentityAccessServerOptions> authServerOptions,
       ILogger<ChangeInitialPasswordModel> logger) {
       _userManager = userManager;
       _signInManager = signInManager;

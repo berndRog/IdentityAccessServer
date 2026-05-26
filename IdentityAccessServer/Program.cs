@@ -25,31 +25,31 @@ public static class Program {
       // ----------------------------
       // Options binding + validation
       // ----------------------------
-      builder.Services.AddOptions<AuthServerOptions>()
-         .Bind(builder.Configuration.GetSection(AuthServerOptions.SectionName))
+      builder.Services.AddOptions<IdentityAccessServerOptions>()
+         .Bind(builder.Configuration.GetSection(IdentityAccessServerOptions.SectionName))
          .Validate(o => !string.IsNullOrWhiteSpace(o.IssuerUri),
-            "AuthServer:IssuerUri is required.")
+            "IdentityAccessServer:IssuerUri is required.")
          .Validate(o => Uri.TryCreate(o.IssuerUri, UriKind.Absolute, out _),
-            "AuthServer:IssuerUri must be a valid absolute URI.")
+            "IdentityAccessServer:IssuerUri must be a valid absolute URI.")
          .Validate(o => o.Tokens.AccessTokenLifetime > TimeSpan.Zero,
-            "AuthServer:Tokens:AccessTokenLifetime must be greater than 00:00:00.")
+            "IdentityAccessServer:Tokens:AccessTokenLifetime must be greater than 00:00:00.")
          .Validate(o => o.Tokens.IdentityTokenLifetime > TimeSpan.Zero,
-            "AuthServer:Tokens:IdentityTokenLifetime must be greater than 00:00:00.")
+            "IdentityAccessServer:Tokens:IdentityTokenLifetime must be greater than 00:00:00.")
          .Validate(o => o.Tokens.AuthorizationCodeLifetime > TimeSpan.Zero,
-            "AuthServer:Tokens:AuthorizationCodeLifetime must be greater than 00:00:00.")
+            "IdentityAccessServer:Tokens:AuthorizationCodeLifetime must be greater than 00:00:00.")
          .Validate(o => o.Tokens.RefreshTokenLifetime > TimeSpan.Zero,
-            "AuthServer:Tokens:RefreshTokenLifetime must be greater than 00:00:00.")
+            "IdentityAccessServer:Tokens:RefreshTokenLifetime must be greater than 00:00:00.")
          .Validate(o => o.Tokens.AuthorizationCodeLifetime <= o.Tokens.RefreshTokenLifetime,
-            "AuthServer:Tokens:AuthorizationCodeLifetime must not exceed RefreshTokenLifetime.")
+            "IdentityAccessServer:Tokens:AuthorizationCodeLifetime must not exceed RefreshTokenLifetime.")
          .Validate(o => o.Tokens.IdentityTokenLifetime <= o.Tokens.RefreshTokenLifetime,
-            "AuthServer:Tokens:IdentityTokenLifetime must not exceed RefreshTokenLifetime.")
+            "IdentityAccessServer:Tokens:IdentityTokenLifetime must not exceed RefreshTokenLifetime.")
          .ValidateOnStart();
 
 
-      var authSection = builder.Configuration.GetSection(AuthServerOptions.SectionName);
+      var authSection = builder.Configuration.GetSection(IdentityAccessServerOptions.SectionName);
       if (!authSection.Exists())
-         throw new InvalidOperationException($"Missing configuration section '{AuthServerOptions.SectionName}'.");
-      var authServer = authSection.Get<AuthServerOptions>()!;
+         throw new InvalidOperationException($"Missing configuration section '{IdentityAccessServerOptions.SectionName}'.");
+      var authServer = authSection.Get<IdentityAccessServerOptions>()!;
       Console.WriteLine("ENV=" + builder.Environment.EnvironmentName);
       Console.WriteLine("IssuerUri=" + authServer.IssuerUri);
       
@@ -225,7 +225,7 @@ public static class Program {
 
    private static void ConfigureOpenIddict(
       IServiceCollection services,
-      AuthServerOptions auth,
+      IdentityAccessServerOptions auth,
       IWebHostEnvironment env
    ) {
       services.AddOpenIddict()
@@ -244,11 +244,11 @@ public static class Program {
 
             // Endpoints as paths
             options
-               .SetAuthorizationEndpointUris("/" + AuthServerOptions.AuthorizationEndpointPath)
-               .SetTokenEndpointUris("/" + AuthServerOptions.TokenEndpointPath)
-               .SetUserInfoEndpointUris("/" + AuthServerOptions.UserInfoEndpointPath)
-               .SetEndSessionEndpointUris("/" + AuthServerOptions.LogoutEndpointPath)
-               .SetConfigurationEndpointUris("/" + AuthServerOptions.ConfigurationEndpointPath);
+               .SetAuthorizationEndpointUris("/" + IdentityAccessServerOptions.AuthorizationEndpointPath)
+               .SetTokenEndpointUris("/" + IdentityAccessServerOptions.TokenEndpointPath)
+               .SetUserInfoEndpointUris("/" + IdentityAccessServerOptions.UserInfoEndpointPath)
+               .SetEndSessionEndpointUris("/" + IdentityAccessServerOptions.LogoutEndpointPath)
+               .SetConfigurationEndpointUris("/" + IdentityAccessServerOptions.ConfigurationEndpointPath);
 
             // Flows
             options.AllowAuthorizationCodeFlow();

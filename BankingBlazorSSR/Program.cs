@@ -161,8 +161,8 @@ public sealed class Program {
       });
 
       //--- Typed HTTP client for the IA-Provider and Banking API / Communication ---
-      services.AddHttpClient("AuthServer", client => {
-         client.BaseAddress = new Uri(configuration["AuthServer:Authority"]!); // https://localhost:7010
+      services.AddHttpClient("IdentityAccessServer", client => {
+         client.BaseAddress = new Uri(configuration["IdentityAccessServer:Authority"]!); // https://localhost:7010
          client.Timeout = TimeSpan.FromSeconds(300);
       });
 
@@ -190,11 +190,11 @@ public sealed class Program {
       IConfiguration config,
       IWebHostEnvironment enviroment
    ) {
-      var auth = config.GetSection("AuthServer");
+      var identityAccessServer = config.GetSection("IdentityAccessServer");
 
       // DEV-only diagnostics: verify that secrets are loaded
       Console.WriteLine(
-         $"SSR ClientId={auth["ClientId"]}, SecretPresent={!string.IsNullOrWhiteSpace(auth["ClientSecret"])}"
+         $"SSR ClientId={identityAccessServer["ClientId"]}, SecretPresent={!string.IsNullOrWhiteSpace(identityAccessServer["ClientSecret"])}"
       );
 
       services
@@ -208,34 +208,34 @@ public sealed class Program {
          })
          .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options => {
             // OIDC authority (issuer base URL)
-            options.Authority = auth["Authority"]!;
+            options.Authority = identityAccessServer["Authority"]!;
 
             // Confidential client credentials
-            options.ClientId = auth["ClientId"]!;
-            options.ClientSecret = auth["ClientSecret"]!;
+            options.ClientId = identityAccessServer["ClientId"]!;
+            options.ClientSecret = identityAccessServer["ClientSecret"]!;
 
             // Authorization Code Flow
             options.ResponseType = OpenIdConnectResponseType.Code;
             options.UsePkce = true;
 
             // Callback endpoints in this SSR app
-            options.CallbackPath = auth["CallbackPath"] ?? "/signin-oidc";
+            options.CallbackPath = identityAccessServer["CallbackPath"] ?? "/signin-oidc";
             options.SignedOutCallbackPath =
-               auth["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
+               identityAccessServer["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
             options.SignedOutRedirectUri = "/"; // 
 
             // Keep tokens in the auth session (cookie ticket)
             options.SaveTokens = true;
 
-            // Optional: fetch additional user claims from /connect/userinfo
+            // Fetch additional user claims from /connect/userinfo
             options.GetClaimsFromUserInfoEndpoint = true;
 
-            // Requested scopes (must match what the AuthServer has seeded/allowed)
+            // Requested scopes (must match what the IdentityAccessServer has seeded/allowed)
             options.Scope.Clear();
             options.Scope.Add("openid");
             options.Scope.Add("profile");
             options.Scope.Add("offline_access"); // for refresh tokens
-            options.Scope.Add(auth["ApiScope"] ?? "banking_api");
+            options.Scope.Add(identityAccessServer["ApiScope"] ?? "banking_api");
 
             // Map name and roles to your claim types
             options.TokenValidationParameters = new TokenValidationParameters {
@@ -345,7 +345,7 @@ DIDAKTIK & LERNZIELE (DE)
 1) SSR + OIDC: klare Verantwortlichkeiten
 ----------------------------------------
 - Cookie = lokale Session im SSR-Frontend (Browser <-> SSR-App)
-- OpenID Connect = Login-Protokoll und Token-Beschaffung (SSR-App <-> AuthServer)
+- OpenID Connect = Login-Protokoll und Token-Beschaffung (SSR-App <-> IdentityAccessServer)
 - Access Token = Aufrufe an die Banking API (SSR-App -> BankingApi)
 
 Merksatz:

@@ -31,21 +31,21 @@ public static class AuthTokenRefreshExtensions {
       // var clientId = config["Auth:ClientId"]!;
       // var clientSecret = config["Auth:ClientSecret"]!;
 
-      var tokenEndpointRaw = config["AuthServer:TokenEndpoint"];
+      var tokenEndpointRaw = config["IdentityAccessServer:TokenEndpoint"];
       if (string.IsNullOrWhiteSpace(tokenEndpointRaw))
-         throw new InvalidOperationException("Missing configuration: AuthServer:TokenEndpoint");
+         throw new InvalidOperationException("Missing configuration: IdentityAccessServer:TokenEndpoint");
       if (!Uri.TryCreate(tokenEndpointRaw, UriKind.Absolute, out var tokenEndpoint))
          return false; // silent fail
       
-      var clientId = config["AuthServer:ClientId"];
+      var clientId = config["IdentityAccessServer:ClientId"];
       if (string.IsNullOrWhiteSpace(clientId))
-         throw new InvalidOperationException("Missing configuration: AuthServer:ClientId");
+         throw new InvalidOperationException("Missing configuration: IdentityAccessServer:ClientId");
 
-      var clientSecret = config["AuthServer:ClientSecret"];
+      var clientSecret = config["IdentityAccessServer:ClientSecret"];
       if (string.IsNullOrWhiteSpace(clientSecret))
-         throw new InvalidOperationException("Missing configuration: AuthServer:ClientSecret");
+         throw new InvalidOperationException("Missing configuration: IdentityAccessServer:ClientSecret");
       
-      var http = httpClientFactory.CreateClient("AuthServer");
+      var http = httpClientFactory.CreateClient("IdentityAccessServer");
 
       using var req = new HttpRequestMessage(HttpMethod.Post, tokenEndpoint);
       req.Content = new FormUrlEncodedContent(new Dictionary<string, string> {

@@ -26,11 +26,11 @@ public sealed class DevTokenController(
       return Problem(
          title: "Deprecated development endpoint",
          detail:
-            $"Use POST /{AuthServerOptions.TokenEndpointPath} with Content-Type 'application/x-www-form-urlencoded', " +
+            $"Use POST /{IdentityAccessServerOptions.TokenEndpointPath} with Content-Type 'application/x-www-form-urlencoded', " +
             $"grant_type={DevGrantTypes.DevPassword}, client_id=dev-token-client, email=<user>, password=<password> and scope=<scopes>.",
          statusCode: StatusCodes.Status410Gone,
          extensions: new Dictionary<string, object?> {
-            ["token_endpoint"] = "/" + AuthServerOptions.TokenEndpointPath,
+            ["token_endpoint"] = "/" + IdentityAccessServerOptions.TokenEndpointPath,
             [Parameters.GrantType] = DevGrantTypes.DevPassword,
             [Parameters.ClientId] = "dev-token-client",
             ["example"] =
@@ -74,7 +74,7 @@ Damit man beim Testen gezielt Tokens für verschiedene APIs ausstellen kann:
 
 So bleibt das Setup skalierbar, ohne Codeänderungen in diesem Controller.
 Die Wahrheit steht in appsettings.json:
-AuthServer:Apis:{Key}:{Scope,Resource}
+IdentityAccessServer:Apis:{Key}:{Scope,Resource}
 
 4) Warum SignInManager + ClaimsPrincipal?
 -----------------------------------------

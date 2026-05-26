@@ -1,10 +1,6 @@
+using System.Net;
 using System.Net.Http.Headers;
-using BankingBlazorSsr.Api.Errors;
-using BankingBlazorSsr.Core;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-
 namespace BankingBlazorSsr.Api.Auth;
 
 public sealed class AccessTokenHandler(
@@ -33,7 +29,7 @@ public sealed class AccessTokenHandler(
 
       var response = await base.SendAsync(request, ct);
 
-      if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+      if (response.StatusCode == HttpStatusCode.Unauthorized)
          throw new ApiUnauthorizedException();
 
       return response;

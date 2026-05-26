@@ -19,11 +19,13 @@ public static class ClaimDestinations {
       if (claim.Type == AuthClaims.Subject)
          return new[] { Destinations.IdentityToken, Destinations.AccessToken };
   
-      // preferred_username -> profile scope, UI only
+      // preferred_username:
+      // - always in access token for APIs
+      // - only in identity token when the client requested profile scope
       if (claim.Type == AuthClaims.PreferredUsername)
          return principal.HasScope(Scopes.Profile)
             ? new[] { Destinations.IdentityToken, Destinations.AccessToken }
-            : Array.Empty<string>();
+            : new[] { Destinations.AccessToken };
       
       // role -> UI-Navigation / AccessToken (für APIs).
       if (claim.Type == AuthClaims.Role)

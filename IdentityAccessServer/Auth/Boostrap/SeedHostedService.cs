@@ -27,7 +27,7 @@ public sealed class SeedHostedService(
       using var scope = sp.CreateScope();
 
       var options = scope.ServiceProvider
-         .GetRequiredService<IOptions<AuthServerOptions>>().Value;
+         .GetRequiredService<IOptions<IdentityAccessServerOptions>>().Value;
 
       var apps = scope.ServiceProvider
          .GetRequiredService<IOpenIddictApplicationManager>();
@@ -45,7 +45,7 @@ public sealed class SeedHostedService(
             if (requiresSecret && string.IsNullOrWhiteSpace(descriptor.ClientSecret))
                throw new InvalidOperationException(
                   $"Client '{descriptor.ClientId}' is confidential but no ClientSecret was provided. " +
-                  $"Set it via '{AuthServerSecretKeys.WebMvcClientSecret}' / '{AuthServerSecretKeys.ServiceClientSecret}'.");
+                  $"Set it via '{IdentityAccessServerSecretKeys.WebMvcClientSecret}' / '{IdentityAccessServerSecretKeys.ServiceClientSecret}'.");
 
             await apps.CreateAsync(descriptor, ct);
             logger.LogInformation("Created OpenIddict client: {ClientId}", descriptor.ClientId);
@@ -95,8 +95,8 @@ public sealed class SeedHostedService(
          foreach (var key in apiKeys) {
             if (!options.Apis.TryGetValue(key, out var api))
                throw new InvalidOperationException(
-                  $"AuthServerOptions.Apis does not contain key '{key}'. " +
-                  $"Check appsettings: AuthServer:Apis:{key}");
+                  $"IdentityAccessServerOptions.Apis does not contain key '{key}'. " +
+                  $"Check appsettings: IdentityAccessServer:Apis:{key}");
 
             d.Permissions.Add(Permissions.Prefixes.Scope + api.Scope);
          }
@@ -107,7 +107,7 @@ public sealed class SeedHostedService(
       // ------------------------------------------------------------
       if (options.Apis.Count == 0)
          throw new InvalidOperationException(
-            "No APIs configured. Add AuthServer:Apis:{...} in appsettings.json.");
+            "No APIs configured. Add IdentityAccessServer:Apis:{...} in appsettings.json.");
 
       foreach (var (key, api) in options.Apis) {
          // key = "CarRentalApi", api.Scope="carrental_api", api.Resource="carrental-api"
@@ -160,7 +160,7 @@ public sealed class SeedHostedService(
       // ------------------------------------------------------------
       var webMvc = new OpenIddictApplicationDescriptor {
          ClientId = options.WebMvc.ClientId,
-         ClientSecret = config[AuthServerSecretKeys.WebMvcClientSecret],
+         ClientSecret = config[IdentityAccessServerSecretKeys.WebMvcClientSecret],
          DisplayName = "WebClient MVC",
          ClientType = ClientTypes.Confidential,
 
@@ -192,7 +192,7 @@ public sealed class SeedHostedService(
       // ------------------------------------------------------------
       var webBlazorSsr = new OpenIddictApplicationDescriptor {
          ClientId = options.WebBlazorSsr.ClientId,
-         ClientSecret = config[AuthServerSecretKeys.WebBlazorSsrSecret],
+         ClientSecret = config[IdentityAccessServerSecretKeys.WebBlazorSsrSecret],
          DisplayName = "WebClient Blazor SSR",
          ClientType = ClientTypes.Confidential,
 
@@ -264,7 +264,7 @@ public sealed class SeedHostedService(
       // ------------------------------------------------------------
       var service = new OpenIddictApplicationDescriptor {
          ClientId = options.ServiceClient.ClientId,
-         ClientSecret = config[AuthServerSecretKeys.ServiceClientSecret],
+         ClientSecret = config[IdentityAccessServerSecretKeys.ServiceClientSecret],
          DisplayName = "Service Client",
          ClientType = ClientTypes.Confidential,
 

@@ -2,10 +2,10 @@
 title OIDC Login Flow (Authorization Code)
 
 actor User
-participant "Blazor SSR Client" as Client
-participant "OIDC Middleware" as Middleware
-participant "Identity Provider\n(OpenIddict)" as IdP
-participant "Banking API" as API
+participant "BlazorSSR\nClient " as Client
+participant "OIDC\nMiddleware" as Middleware
+participant "Identity&Access \nServer" as IdP
+participant "Banking API\nRESTAPI" as API
 
 User -> Client : GET /
 Client -> Middleware : Not authenticated

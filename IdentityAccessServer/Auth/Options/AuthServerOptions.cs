@@ -7,9 +7,9 @@ namespace IdentityAccessServer.Auth.Options;
 /// - Issuer is the single source of truth (OIDC relevant).
 /// - Client secrets are read from configuration (UserSecrets/Env/KeyVault).
 /// </summary>
-public sealed class AuthServerOptions {
+public sealed class IdentityAccessServerOptions {
    
-   public const string SectionName = "AuthServer";
+   public const string SectionName = "IdentityAccessServer";
 
    // OIDC Issuer (single source of truth)
    // ------------------------------------------------------------------
@@ -121,8 +121,8 @@ public enum ClientType {
    Confidential = 2
 }
 
-public static class AuthServerSecretKeys {
-   public const string WebMvcClientSecret = "AuthServer:WebMvc:ClientSecret";
-   public const string WebBlazorSsrSecret = "AuthServer:WebBlazorSsr:ClientSecret";
-   public const string ServiceClientSecret = "AuthServer:ServiceClient:ClientSecret";
+public static class IdentityAccessServerSecretKeys {
+   public const string WebMvcClientSecret = "IdentityAccessServer:WebMvc:ClientSecret";
+   public const string WebBlazorSsrSecret = "IdentityAccessServer:WebBlazorSsr:ClientSecret";
+   public const string ServiceClientSecret = "IdentityAccessServer:ServiceClient:ClientSecret";
 }

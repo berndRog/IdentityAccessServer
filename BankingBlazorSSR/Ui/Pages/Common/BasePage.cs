@@ -1,7 +1,5 @@
 using BankingBlazorSsr.Api.Errors;
-using BankingBlazorSsr.Core;
 using Microsoft.AspNetCore.Components;
-
 namespace BankingBlazorSsr.Ui.Common;
 
 public abstract class BasePage : ComponentBase {

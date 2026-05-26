@@ -74,10 +74,10 @@ public partial class EmployeesList : IDisposable {
    }
 
    private void OpenRegisterEmployee() {
-      var authority = Configuration["AuthServer:Authority"]?.TrimEnd('/');
+      var authority = Configuration["IdentityAccessServer:Authority"]?.TrimEnd('/');
       if (string.IsNullOrWhiteSpace(authority)) {
-         ErrorMessage = "AuthServer:Authority is not configured.";
-         Logger.LogWarning("EmployeesList: AuthServer:Authority is missing.");
+         ErrorMessage = "IdentityAccessServer:Authority is not configured.";
+         Logger.LogWarning("EmployeesList: IdentityAccessServer:Authority is missing.");
          return;
       }
 
